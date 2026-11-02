@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="sunset">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>منظومة راوتر ESP32 الذكي - لوحة مخرجات المشروع والمعاينة الشاملة</title>
+<style>
+:root[data-theme='sunset']{
+  --bg-gradient: radial-gradient(circle at 20% 15%, #2a1645 0%, #150f28 50%, #0a0b16 100%);
+  --glass-bg: rgba(28, 24, 48, 0.72);
+  --glass-card: rgba(35, 30, 60, 0.65);
+  --glass-header: rgba(38, 30, 65, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-hover: rgba(244, 63, 94, 0.5);
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #f43f5e;
+  --accent-hover: #fb7185;
+  --accent-grad: linear-gradient(135deg, #e11d48, #f97316);
+  --accent-shadow: rgba(225, 29, 72, 0.35);
+  --card-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.45);
+  --green: #10b981;
+  --red: #ef4444;
+  --amber: #f59e0b;
+  --cyan: #06b6d4;
+  --blue: #3b82f6;
+  --badge-gaming-bg: rgba(6, 182, 212, 0.16);
+  --badge-gaming-border: rgba(6, 182, 212, 0.45);
+  --badge-gaming-color: #22d3ee;
+}
+:root[data-theme='matrix']{
+  --bg-gradient: radial-gradient(circle at 30% 20%, #0d2b1d 0%, #071911 50%, #030d08 100%);
+  --glass-bg: rgba(13, 33, 24, 0.72);
+  --glass-card: rgba(16, 44, 31, 0.65);
+  --glass-header: rgba(18, 48, 34, 0.85);
+  --glass-border: rgba(0, 255, 157, 0.18);
+  --glass-border-hover: rgba(0, 255, 157, 0.5);
+  --text: #ecfdf5;
+  --muted: #6ee7b7;
+  --accent: #00ff9d;
+  --accent-hover: #34d399;
+  --accent-grad: linear-gradient(135deg, #059669, #00ff9d);
+  --accent-shadow: rgba(0, 255, 157, 0.28);
+  --card-shadow: 0 10px 35px 0 rgba(0, 255, 157, 0.12);
+  --green: #00ff9d;
+  --red: #f43f5e;
+  --amber: #fbbf24;
+  --cyan: #38bdf8;
+  --blue: #0ea5e9;
+  --badge-gaming-bg: rgba(56, 189, 248, 0.16);
+  --badge-gaming-border: rgba(56, 189, 248, 0.45);
+  --badge-gaming-color: #7dd3fc;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;
+  background:var(--bg-gradient);
+  background-attachment:fixed;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans Arabic",Tahoma,sans-serif;
+  line-height:1.6;
+  padding:16px 20px 60px;
+  overflow-x:hidden;
+}
+
+.container{max-width:1400px;margin:0 auto}
+
+/* Glass Utility */
+.glass{
+  background:var(--glass-bg);
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+  border:1px solid var(--glass-border);
+  border-radius:18px;
+  box-shadow:var(--card-shadow);
+  transition:all .3s ease;
+}
+.glass-card{
+  background:var(--glass-card);
+  backdrop-filter:blur(18px);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:20px;
+  transition:all .25s ease;
+}
+.glass-card:hover{
+  border-color:var(--glass-border-hover);
+  transform:translateY(-3px);
+}
+
+/* Header */
+.top-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 26px;
+  background:var(--glass-header);
+  border-radius:20px;
+  margin-bottom:24px;
+  flex-wrap:wrap;
+  gap:16px;
+  border:1px solid var(--glass-border);
+}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-icon{
+  width:48px;height:48px;border-radius:14px;background:var(--accent-grad);
+  display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+  box-shadow:0 4px 15px var(--accent-shadow);
+}
+.brand-text h1{font-size:1.4rem;font-weight:900;color:#fff;line-height:1.2}
+.brand-text p{font-size:0.85rem;color:var(--muted);margin-top:2px}
+
+.header-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+.theme-pill{
+  display:inline-flex;background:rgba(0,0,0,0.35);border:1px solid var(--glass-border);
+  border-radius:30px;padding:3px;gap:2px;
+}
+.theme-btn{
+  background:none;border:none;color:var(--muted);padding:7px 16px;border-radius:24px;
+  font-size:0.82rem;font-weight:700;cursor:pointer;transition:all .2s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.theme-btn.active{
+  background:var(--accent-grad);color:#fff;box-shadow:0 2px 10px var(--accent-shadow);
+}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border-radius:12px;
+  font-size:0.88rem;font-weight:700;cursor:pointer;border:none;transition:all .25s ease;
+  text-decoration:none;
+}
+.btn-primary{
+  background:var(--accent-grad);color:#fff;box-shadow:0 4px 15px var(--accent-shadow);
+}
+.btn-primary:hover{opacity:.92;transform:scale(1.02)}
+.btn-secondary{
+  background:rgba(255,255,255,0.08);color:var(--text);border:1px solid var(--glass-border);
+}
+.btn-secondary:hover{background:rgba(255,255,255,0.15);border-color:var(--glass-border-hover)}
+
+/* Hero Banner */
+.hero-banner{
+  padding:26px 30px;
+  margin-bottom:24px;
+  background:linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+  position:relative;
+  overflow:hidden;
+}
+.hero-badge-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.pill-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;
+  font-size:0.78rem;font-weight:700;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);
+}
+.pill-badge.success{color:var(--green);border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.12)}
+.pill-badge.cyan{color:var(--cyan);border-color:rgba(6,182,212,0.3);background:rgba(6,182,212,0.12)}
+.pill-badge.accent{color:var(--accent);border-color:var(--glass-border-hover);background:rgba(244,63,94,0.12)}
+
+.hero-title{font-size:1.75rem;font-weight:900;margin-bottom:10px;color:#fff}
+.hero-desc{color:var(--muted);font-size:0.96rem;max-width:980px;line-height:1.7}
+
+/* 4 Feature Cards Grid */
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+  gap:18px;
+  margin-bottom:28px;
+}
+.feat-card{position:relative;display:flex;flex-direction:column;justify-content:space-between}
+.feat-header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.feat-icon{
+  width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:1.35rem;background:rgba(255,255,255,0.08);border:1px solid var(--glass-border);
+}
+.feat-title{font-size:1.1rem;font-weight:800;color:#fff}
+.feat-list{list-style:none;display:flex;flex-direction:column;gap:8px;font-size:0.86rem;color:var(--muted)}
+.feat-list li{display:flex;align-items:flex-start;gap:8px}
+.feat-list li span.bullet{color:var(--accent);font-weight:900}
+
+/* Section Tabs */
+.main-tabs{
+  display:flex;
+  gap:8px;
+  border-bottom:1px solid var(--glass-border);
+  padding-bottom:12px;
+  margin-bottom:22px;
+  overflow-x:auto;
+}
+.tab-link{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:12px;
+  font-size:0.92rem;font-weight:700;color:var(--muted);background:rgba(255,255,255,0.04);
+  border:1px solid transparent;cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.tab-link:hover{color:#fff;background:rgba(255,255,255,0.08)}
+.tab-link.active{
+  color:#fff;background:var(--accent-grad);border-color:transparent;box-shadow:0 3px 12px var(--accent-shadow);
+}
+
+.tab-pane{display:none}
+.tab-pane.active{display:block;animation:fadeIn .3s ease}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Embedded Preview Container */
+.preview-container{
+  background:rgba(0,0,0,0.45);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.preview-toolbar{
+  display:flex;justify-content:space-between;align-items:center;padding:10px 16px;
+  background:rgba(0,0,0,0.5);border-bottom:1px solid var(--glass-border);flex-wrap:wrap;gap:10px;
+}
+.preview-modes{display:flex;gap:6px}
+.mode-btn{
+  background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--muted);
+  padding:5px 12px;border-radius:8px;font-size:0.8rem;cursor:pointer;transition:all .2s;
+}
+.mode-btn.active{background:var(--accent-grad);color:#fff;border-color:transparent}
+.iframe-wrapper{
+  width:100%;height:820px;display:flex;justify-content:center;background:#05070f;
+  transition:all .3s ease;position:relative;
+}
+.iframe-wrapper iframe{
+  width:100%;height:100%;border:none;transition:width .3s ease;
+}
+
+/* Telegram Interactive Simulator */
+.telegram-sim-box{
+  display:grid;
+  grid-template-columns: 340px 1fr;
+  gap:20px;
+}
+@media (max-width: 900px){
+  .telegram-sim-box{grid-template-columns:1fr}
+}
+.sim-controls{display:flex;flex-direction:column;gap:14px}
+.sim-role-card{
+  background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);border-radius:12px;
+  padding:14px;cursor:pointer;transition:all .2s;
+}
+.sim-role-card:hover{background:rgba(255,255,255,0.08);border-color:var(--glass-border-hover)}
+.sim-role-card.active{
+  background:rgba(244,63,94,0.12);border-color:var(--accent);box-shadow:0 0 12px var(--accent-shadow);
+}
+.role-badge{font-size:0.75rem;padding:3px 8px;border-radius:10px;background:rgba(255,255,255,0.1);font-weight:700}
+.role-title{font-size:0.95rem;font-weight:800;color:#fff;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.role-desc{font-size:0.8rem;color:var(--muted)}
+
+.tg-phone-mockup{
+  background:#17212b;
+  border-radius:24px;
+  border:4px solid #242f3d;
+  box-shadow:0 15px 40px rgba(0,0,0,0.6);
+  display:flex;
+  flex-direction:column;
+  height:650px;
+  overflow:hidden;
+}
+.tg-top-bar{
+  background:#242f3d;padding:12px 16px;display:flex;align-items:center;gap:12px;color:#fff;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.tg-avatar{
+  width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg, #0088cc, #00b4d8);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+}
+.tg-info h4{font-size:0.95rem;font-weight:700;color:#fff}
+.tg-info span{font-size:0.76rem;color:#64b5f6}
+
+.tg-messages-area{
+  flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;
+  background:radial-gradient(circle at center, #1b2734 0%, #0e1621 100%);
+}
+.tg-msg{
+  max-width:85%;padding:10px 14px;border-radius:14px;font-size:0.85rem;line-height:1.5;
+  position:relative;animation:fadeIn .25s ease;word-break:break-word;
+}
+.tg-msg.incoming{
+  align-self:flex-start;background:#242f3d;color:#f5f5f5;border-bottom-right-radius:4px;
+}
+.tg-msg.outgoing{
+  align-self:flex-end;background:#2b5278;color:#fff;border-bottom-left-radius:4px;
+}
+.tg-msg code{
+  background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;font-family:monospace;color:#64b5f6;
+}
+.tg-inline-kbd{
+  display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);
+}
+.tg-btn{
+  background:#2f3f50;border:1px solid rgba(255,255,255,0.12);color:#64b5f6;padding:6px 12px;
+  border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.tg-btn:hover{background:#3b4e63;color:#90caf9}
+
+.tg-bottom-bar{
+  background:#242f3d;padding:10px 12px;display:flex;flex-direction:column;gap:8px;
+}
+.tg-quick-commands{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.cmd-chip{
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#90caf9;
+  padding:4px 10px;border-radius:14px;font-size:0.75rem;cursor:pointer;white-space:nowrap;transition:all .2s;
+}
+.cmd-chip:hover{background:rgba(100,181,246,0.2)}
+
+.tg-input-row{display:flex;align-items:center;gap:8px}
+.tg-input{
+  flex:1;background:#17212b;border:1px solid rgba(255,255,255,0.12);color:#fff;
+  padding:9px 14px;border-radius:20px;font-size:0.86rem;outline:none;
+}
+.tg-input:focus{border-color:#64b5f6}
+.tg-send-btn{
+  background:#0088cc;border:none;color:#fff;width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all .2s;
+}
+.tg-send-btn:hover{background:#0099e6}
+
+/* Code & Architecture Matrix */
+.arch-table-wrap{overflow-x:auto}
+.arch-table{
+  width:100%;border-collapse:collapse;text-align:right;font-size:0.88rem;
+}
+.arch-table th{
+  padding:12px 14px;background:rgba(255,255,255,0.06);color:#fff;font-weight:800;border-bottom:2px solid var(--glass-border);
+}
+.arch-table td{
+  padding:12px 14px;border-bottom:1px solid var(--glass-border);color:var(--text);vertical-align:middle;
+}
+.arch-table tr:hover td{background:rgba(255,255,255,0.03)}
+.file-badge{
+  font-family:monospace;background:rgba(0,0,0,0.3);padding:3px 8px;border-radius:6px;
+  color:var(--cyan);font-size:0.82rem;direction:ltr;display:inline-block;
+}
+
+/* Flashing Box */
+.terminal-card{
+  background:#080c14;border:1px solid rgba(255,255,255,0.1);border-radius:14px;
+  padding:18px;position:relative;margin-top:12px;
+}
+.terminal-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
+  font-size:0.8rem;color:var(--muted);border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:8px;
+}
+.terminal-dots{display:flex;gap:6px}
+.terminal-dot{width:10px;height:10px;border-radius:50%}
+.dot-red{background:#ef4444}.dot-yellow{background:#f59e0b}.dot-green{background:#10b981}
+.code-block{
+  font-family:"Consolas","Fira Code",monospace;font-size:0.88rem;color:#38bdf8;
+  white-space:pre-wrap;direction:ltr;text-align:left;line-height:1.6;
+}
+.copy-pill{
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;
+  padding:4px 10px;border-radius:6px;font-size:0.75rem;cursor:pointer;transition:all .2s;
+}
+.copy-pill:hover{background:var(--accent-grad)}
+
+/* Footer */
+footer{
+  margin-top:40px;text-align:center;padding:20px;color:var(--muted);font-size:0.85rem;
+  border-top:1px solid var(--glass-border);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <header class="top-header glass">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-text">
+        <h1>راوتر ESP32 الذكي - لوحة المخرجات والمعاينة التفاعلية</h1>
+        <p>نظام التوجيه المتقدم والتحكم بالباندويث وبوت التيليجرام التفاعلي (ESP-IDF v6.x & lwIP NAPT)</p>
+      </div>
+    </div>
+    <div class="header-controls">
+      <div class="theme-pill">
+        <button class="theme-btn active" id="btnSunset" onclick="setTheme('sunset')">🌅 الغروب الكوني</button>
+        <button class="theme-btn" id="btnMatrix" onclick="setTheme('matrix')">🟢 الأخضر السيبراني</button>
+      </div>
+      <a href="preview_dashboard_v2.html" target="_blank" class="btn btn-primary">🚀 فتح الراوتر بملء الشاشة</a>
+      <button class="btn btn-secondary" onclick="copyFlashCmd()">📋 نسخ أمر الحرق</button>
+    </div>
+  </header>
+
+  <!-- Hero Status -->
+  <div class="hero-banner glass">
+    <div class="hero-badge-row">
+      <span class="pill-badge success">✅ حالة الفيرموير: تم التجميع بنجاح (155/155 Ninja)</span>
+      <span class="pill-badge cyan">⚡ معمارية lwIP NAPT: خطافات IRAM عالية السرعة</span>
+      <span class="pill-badge" style="color:var(--cyan);border-color:rgba(6,182,212,0.3);background:rgba(6,182,212,0.12)">🌐 تثبيت الـ IP (Static IP): مدعوم للمودم والأجهزة</span>
+      <span class="pill-badge accent">🤖 بوت التيليجرام: تفاعلي (Push & Long Polling)</span>
+      <span class="pill-badge success">🎨 الواجهة: Glassmorphic RTL Zero-RAM Flash</span>
+    </div>
+    <h2 class="hero-title">تقرير شامل لما تم إنجازه والتحقق منه في المشروع</h2>
+    <p class="hero-desc">
+      تمت هندسة وبناء وتجميع فيرموير متكامل وعالي الأداء لراوتر ESP32، يجمع بين تقنية توجيه الحزم العتادية NAPT،
+      والتحكم الدقيق في السرعات بالـ Token-Bucket لكل جهاز، ونظام التنبيهات الآلي والاستعلام اللحظي للتيليجرام،
+      وواجهة مستخدم زجاجية غاية في الجمال والأناقة مع دعم الثيم المزدوج وتوفير الذاكرة بالكامل.
+    </p>
+  </div>
+
+  <!-- Key Achievements Cards -->
+  <div class="features-grid">
+    <!-- Card 1 -->
+    <div class="glass-card feat-card">
+      <div>
+        <div class="feat-header">
+          <div class="feat-icon" style="color:#0088cc">🤖</div>
+          <div class="feat-title">بوت التيليجرام التفاعلي الشامل</div>
+        </div>
+        <ul class="feat-list">
+          <li><span class="bullet">✔</span> استعلام لحظي (Long Polling) على Core 1 بدون تعطيل الروتر.</li>
+          <li><span class="bullet">✔</span> تنبيهات عتبات الكوتا الآلية (50%, 75%, 90%, 95%) للباقة والأجهزة.</li>
+          <li><span class="bullet">✔</span> ربط معرف التيليجرام (Chat ID) بكل جهاز في الـ NVS.</li>
+          <li><span class="bullet">✔</span> أزرار Inline Keyboards تفاعلية لأصحاب الأجهزة المتعددة.</li>
+          <li><span class="bullet">✔</span> قناع رقمي (Bitmask) لمنع الإزعاج وتكرار التنبيهات.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="glass-card feat-card">
+      <div>
+        <div class="feat-header">
+          <div class="feat-icon" style="color:var(--accent)">⚡</div>
+          <div class="feat-title">إدارة السرعات والكوتا المتقدمة</div>
+        </div>
+        <ul class="feat-list">
+          <li><span class="bullet">✔</span> محدد سرعة Token-Bucket عالي الدقة دون حجز ذاكرة (Zero-Heap).</li>
+          <li><span class="bullet">✔</span> تحكم مستقل تماماً في سرعة التنزيل والرفع لكل جهاز.</li>
+          <li><span class="bullet">✔</span> تخصيص كوتا بالجيجابايت وحظر فوري عند الاستهلاك 100%.</li>
+          <li><span class="bullet">✔</span> وضع الألعاب VIP Gaming Mode بأولوية وتأخير منخفض (DSCP 0xB8).</li>
+          <li><span class="bullet">✔</span> حفظ العدادات دورياً في NVS مع الحماية من فقدان الطاقة.</li>
+          <li><span class="bullet">✔</span> تثبيت عنوان الـ IP للراوتر (Static IP) وللأجهزة المتصلة لمنع تضارب العناوين.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="glass-card feat-card">
+      <div>
+        <div class="feat-header">
+          <div class="feat-icon" style="color:var(--green)">🎨</div>
+          <div class="feat-title">الواجهة الزجاجية والعرض المزدوج</div>
+        </div>
+        <ul class="feat-list">
+          <li><span class="bullet">✔</span> مبدل ثيمات ديناميكي: "الغروب الكوني" الفاخر و "الأخضر السيبراني".</li>
+          <li><span class="bullet">✔</span> التبديل السلس بين عرض البطاقات الزجاجية الحديث وعرض الجدول.</li>
+          <li><span class="bullet">✔</span> رسم بياني لحظي لحركة الشبكة وسرعات الأجهزة بالـ HTML5 Canvas.</li>
+          <li><span class="bullet">✔</span> تقديم الواجهة بنمط Zero-RAM من الفلاش مباشرة ومضغوطة بـ Gzip.</li>
+          <li><span class="bullet">✔</span> حقول سريعة لحفظ وتعديل سرعة وكوتا وتيليجرام كل جهاز بنقرة واحدة.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="glass-card feat-card">
+      <div>
+        <div class="feat-header">
+          <div class="feat-icon" style="color:var(--cyan)">💾</div>
+          <div class="feat-title">الفيرموير ومعمارية العتاد</div>
+        </div>
+        <ul class="feat-list">
+          <li><span class="bullet">✔</span> مبني على ESP-IDF v6.x ومترجم بنجاح عبر Ninja و Xtensa GCC 15.</li>
+          <li><span class="bullet">✔</span> ملف الفيرموير الجاهز: <code>bin/esp32_napt_router.bin</code> (998 KB).</li>
+          <li><span class="bullet">✔</span> مساحة شاغرة 43% في بارتشن التطبيق تدعم التحديث الهوائي (Dual OTA).</li>
+          <li><span class="bullet">✔</span> عزل الأنوية: Core 0 للتوجيه و lwIP، و Core 1 للويب والتيليجرام.</li>
+          <li><span class="bullet">✔</span> حفظ سليم لإعدادات الراوتر في NVS مع التوافقية العكسية للبيانات.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="main-tabs">
+    <button class="tab-link active" onclick="switchTab('tab-preview')">🖥️ المعاينة الحية لصفحة الراوتر</button>
+    <button class="tab-link" onclick="switchTab('tab-telegram')">📱 محاكي بوت التيليجرام التفاعلي</button>
+    <button class="tab-link" onclick="switchTab('tab-architecture')">🛠️ المعمارية البرمجية والملفات</button>
+    <button class="tab-link" onclick="switchTab('tab-flashing')">🚀 ملفات الـ Binary ودليل الحرق</button>
+  </div>
+
+  <!-- TAB 1: Live Web UI Preview -->
+  <div id="tab-preview" class="tab-pane active">
+    <div class="preview-container">
+      <div class="preview-toolbar">
+        <div class="preview-modes">
+          <span style="font-size:0.85rem;font-weight:700;color:var(--text);margin-left:8px;align-self:center">📐 قياس العرض:</span>
+          <button class="mode-btn active" onclick="setIframeWidth('100%', this)">🖥️ حاسوب (100%)</button>
+          <button class="mode-btn" onclick="setIframeWidth('840px', this)">💻 تابلت (840px)</button>
+          <button class="mode-btn" onclick="setIframeWidth('420px', this)">📱 هاتف (420px)</button>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="mode-btn" onclick="reloadIframe()">🔄 إعادة تحميل المعاينة</button>
+          <a href="preview_dashboard_v2.html" target="_blank" class="mode-btn" style="text-decoration:none;color:var(--cyan)">↗️ فتح في نافذة مستقلة</a>
+        </div>
+      </div>
+      <div class="iframe-wrapper" id="iframeWrapper">
+        <iframe id="previewIframe" src="preview_dashboard_v2.html" title="Router Preview"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Interactive Telegram Simulator -->
+  <div id="tab-telegram" class="tab-pane">
+    <div class="glass-card" style="margin-bottom:18px">
+      <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin-bottom:6px">🧪 مختبر تجربة بوت التيليجرام اللحظي</h3>
+      <p style="font-size:0.86rem;color:var(--muted)">
+        يمكنك هنا اختبار ردود كود الـ C الخاص بـ <code>telegram_bot.c</code> بدقة 100%. قم باختيار دور المستخدم من القائمة اليمينية،
+        ثم اضغط على الأوامر السريعة أو اكتب أي رسالة وشاهد كيف يتعرف البوت تلقائياً على المدير، ومستخدم الجهاز الواحد،
+        ومستخدم الأجهزة المتعددة مع أزرار الـ Inline التفاعلية!
+      </p>
+    </div>
+
+    <div class="telegram-sim-box">
+      <!-- Role Selector -->
+      <div class="sim-controls">
+        <div class="sim-role-card active" onclick="selectRole('admin', this)">
+          <div class="role-title">
+            <span>👑 مدير النظام (Admin)</span>
+            <span class="role-badge" style="background:#f43f5e;color:#fff">Chat ID: 987654321</span>
+          </div>
+          <div class="role-desc">له صلاحيات كاملة: تقرير الباقة العامة، تفاصيل الأجهزة، حظر وفك حظر، تعديل السرعات، والريستارت.</div>
+        </div>
+
+        <div class="sim-role-card" onclick="selectRole('single', this)">
+          <div class="role-title">
+            <span>📱 مستخدم جهاز واحد</span>
+            <span class="role-badge" style="background:#10b981;color:#fff">Chat ID: 11223344</span>
+          </div>
+          <div class="role-desc">مرتبط بهاتف محمول فقط: يصله فوراً تقرير جهازه واستهلاكه وسرعته الحالية فور كتابة "استهلاك".</div>
+        </div>
+
+        <div class="sim-role-card" onclick="selectRole('multi', this)">
+          <div class="role-title">
+            <span>💻📱 مستخدم أجهزة متعددة</span>
+            <span class="role-badge" style="background:#0ea5e9;color:#fff">Chat ID: 55667788</span>
+          </div>
+          <div class="role-desc">مرتبط بهاتف + لابتوب: يصله ملخص مجمع مع <b>أزرار تيليجرام تفاعلية (Inline Buttons)</b> لاختيار الجهاز.</div>
+        </div>
+
+        <div class="sim-role-card" onclick="selectRole('unregistered', this)">
+          <div class="role-title">
+            <span>❓ مستخدم غير مسجل</span>
+            <span class="role-badge" style="background:#94a3b8;color:#000">Chat ID: 99887766</span>
+          </div>
+          <div class="role-desc">شخص غريب يراسل البوت: يتم الرد عليه بترحيب مهذب مع عرض Chat ID الخاص به لتسليمه للمدير.</div>
+        </div>
+
+        <div class="glass-card" style="padding:14px">
+          <div style="font-weight:700;font-size:0.85rem;color:#fff;margin-bottom:6px">🔔 تجربة التنبيهات الآلية (Push):</div>
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:6px;font-size:0.8rem" onclick="simPushAlert('global')">🚨 إرسال تنبيه كوتا الباقة العامة (90%)</button>
+          <button class="btn btn-secondary" style="width:100%;font-size:0.8rem" onclick="simPushAlert('device')">⚠️ إرسال إنذار كوتا جهاز (75%)</button>
+        </div>
+      </div>
+
+      <!-- Phone Mockup -->
+      <div class="tg-phone-mockup">
+        <div class="tg-top-bar">
+          <div class="tg-avatar">🤖</div>
+          <div class="tg-info">
+            <h4>راوتر المنزل الذكي</h4>
+            <span>بوت متصل (Core 1 Polling)</span>
+          </div>
+        </div>
+
+        <div class="tg-messages-area" id="tgMessages">
+          <div class="tg-msg incoming">
+            👋 أهلاً بك في بوت راوتر ESP32 الذكي!<br>
+            يمكنك إرسال أي من الأوامر التالية أو الضغط على الأزرار السريعة بالأسفل.
+          </div>
+        </div>
+
+        <div class="tg-bottom-bar">
+          <div class="tg-quick-commands">
+            <span class="cmd-chip" onclick="sendTgCommand('/quota')">📊 /quota (استهلاك)</span>
+            <span class="cmd-chip" onclick="sendTgCommand('باقي')">⏳ باقي</span>
+            <span class="cmd-chip" onclick="sendTgCommand('/all')">📋 /all (الأجهزة)</span>
+            <span class="cmd-chip" onclick="sendTgCommand('/status')">ℹ️ /status</span>
+            <span class="cmd-chip" onclick="sendTgCommand('/speed')">⚡ /speed</span>
+            <span class="cmd-chip" onclick="sendTgCommand('/start')">🚀 /start</span>
+          </div>
+          <div class="tg-input-row">
+            <input type="text" class="tg-input" id="tgInput" placeholder="اكتب أمراً أو رسالة للبوت..." onkeypress="handleTgKey(event)">
+            <button class="tg-send-btn" onclick="sendTgMessage()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Codebase & Architecture -->
+  <div id="tab-architecture" class="tab-pane">
+    <div class="glass-card">
+      <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:12px">📁 خريطة الملفات البرمجية والمعمارية المنجزة</h3>
+      <div class="arch-table-wrap">
+        <table class="arch-table">
+          <thead>
+            <tr>
+              <th>المكون</th>
+              <th>الملف المصدري</th>
+              <th>الوظيفة والمعمارية المنفذة</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>الاتصال بالواي فاي و IP الثابت</strong></td>
+              <td><span class="file-badge">main/wifi_manager.c & router_config.c</span></td>
+              <td>فحص الشبكات المحيطة، وتثبيت IP الراوتر (Static IP, Netmask, Gateway, DNS)، وربط IP الأجهزة في NVS.</td>
+              <td><span class="pill-badge success">✅ مدمج ومفعل</span></td>
+            </tr>
+            <tr>
+              <td><strong>معرفات التيليجرام للأجهزة</strong></td>
+              <td><span class="file-badge">main/router_globals.h</span></td>
+              <td>إضافة <code>char telegram_chat_id[32]</code> داخل هيكل <code>device_policy_t</code> المحزوم بحجم 50 بايت.</td>
+              <td><span class="pill-badge success">✅ مدمج ومفعل</span></td>
+            </tr>
+            <tr>
+              <td><strong>تتبع الاستهلاك و NVS</strong></td>
+              <td><span class="file-badge">main/meter.c & meter.h</span></td>
+              <td>حفظ معرفات التيليجرام في الفلاش، معالجة التوافقية العكسية مع سجلات NVS القديمة دون تلف، وتحديث DHCP.</td>
+              <td><span class="pill-badge success">✅ مدمج ومفعل</span></td>
+            </tr>
+            <tr>
+              <td><strong>محرك بوت التيليجرام</strong></td>
+              <td><span class="file-badge">main/telegram_bot.c & .h</span></td>
+              <td>مهمة FreeRTOS على Core 1، دعم Inline Keyboards و Callback Queries، وتنبيهات الكوتا الآلية متعددة العتبات.</td>
+              <td><span class="pill-badge success">✅ مدمج ومفعل</span></td>
+            </tr>
+            <tr>
+              <td><strong>واجهات الـ REST API</strong></td>
+              <td><span class="file-badge">main/web_server.c</span></td>
+              <td>مسارات <code>/api/devices</code> و <code>/api/device/save</code> و <code>/api/telegram/test</code> مع دعم JSON التدفقي.</td>
+              <td><span class="pill-badge success">✅ مدمج ومفعل</span></td>
+            </tr>
+            <tr>
+              <td><strong>الواجهة الزجاجية Glassmorphic</strong></td>
+              <td><span class="file-badge">main/web_page.html</span></td>
+              <td>دعم العرض المزدوج (بطاقات/جدول)، عمود التيليجرام، إعدادات البوت، ومبدل الثيمات الديناميكي في LocalStorage.</td>
+              <td><span class="pill-badge success">✅ مدمج ومفعل</span></td>
+            </tr>
+            <tr>
+              <td><strong>ضغط الويب Zero-RAM</strong></td>
+              <td><span class="file-badge">compress_webpage.py & web_page_gz.h</span></td>
+              <td>ضغط صفحة الويب عبر Gzip وحفظها داخل مصفوفة <code>.rodata</code> في الفلاش لتقديمها مباشرة دون استهلاك RAM.</td>
+              <td><span class="pill-badge success">✅ 25 KB في الفلاش</span></td>
+            </tr>
+            <tr>
+              <td><strong>محدد السرعة والـ QoS</strong></td>
+              <td><span class="file-badge">main/meter.c (IRAM hooks)</span></td>
+              <td>خوارزمية Token-Bucket فائقة السرعة، استقلالية تامة للرفع والتنزيل، وتمرير سريع لأجهزة Gaming VIP (DSCP 0xB8).</td>
+              <td><span class="pill-badge success">✅ Zero-Heap IRAM</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Flashing Guide -->
+  <div id="tab-flashing" class="tab-pane">
+    <div class="glass-card">
+      <h3 style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:12px">🚀 ملفات الـ Binary النهائية وأمر الحرق الفوري</h3>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:16px">
+        تم تجميع الفيرموير بالكامل ووضعه داخل مجلد <code>bin/</code> في المشروع، وهو جاهز تماماً للحرق على أي قطعة ESP32 (32-bit Xtensa Dual-Core).
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:14px;margin-bottom:20px">
+        <div class="glass" style="padding:16px">
+          <div style="color:var(--cyan);font-weight:800;font-size:0.95rem">📦 كود التطبيق الأساسي (App)</div>
+          <div style="font-family:monospace;font-size:0.85rem;color:#fff;margin:4px 0">bin/esp32_napt_router.bin</div>
+          <div style="font-size:0.8rem;color:var(--muted)">الحجم: ~975 KB | مساحة خالية: 43% (0xb5000)</div>
+        </div>
+        <div class="glass" style="padding:16px">
+          <div style="color:var(--amber);font-weight:800;font-size:0.95rem">⚙️ محمل الإقلاع (Bootloader)</div>
+          <div style="font-family:monospace;font-size:0.85rem;color:#fff;margin:4px 0">bin/bootloader.bin</div>
+          <div style="font-size:0.8rem;color:var(--muted)">الحجم: ~25.5 KB | Offset: 0x1000</div>
+        </div>
+        <div class="glass" style="padding:16px">
+          <div style="color:var(--green);font-weight:800;font-size:0.95rem">📑 جدول التقسيمات (Partition Table)</div>
+          <div style="font-family:monospace;font-size:0.85rem;color:#fff;margin:4px 0">bin/partition-table.bin</div>
+          <div style="font-size:0.8rem;color:var(--muted)">الحجم: 3 KB | يدعم OTA0 / OTA1 و NVS</div>
+        </div>
+      </div>
+
+      <div class="terminal-card">
+        <div class="terminal-header">
+          <div class="terminal-dots">
+            <span class="terminal-dot dot-red"></span>
+            <span class="terminal-dot dot-yellow"></span>
+            <span class="terminal-dot dot-green"></span>
+          </div>
+          <span>PowerShell Flashing Command</span>
+          <button class="copy-pill" onclick="copyFlashCmd()">📋 نسخ الأمر</button>
+        </div>
+        <pre class="code-block" id="flashCmdText">.\flash_firmware.ps1 -Port "COM3" -Baud 921600</pre>
+      </div>
+
+      <div style="margin-top:16px;font-size:0.85rem;color:var(--muted)">
+        💡 <b>ملاحظة سريعة:</b> قم بتوصيل بوردة الـ ESP32 عبر كابل الـ USB وتأكد من رقم المنفذ في إدارة الأجهزة (Device Manager)، ثم نفذ السكربت أعلاه.
+        بعد الحرق، ستظهر شبكة واي فاي باسم <code>ESP32-Router</code> بكلمة مرور افتراضية <code>12345678</code>، وافتح المتصفح على <code>192.168.4.1</code>.
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>منظومة راوتر ESP32 الذكي وإدارة النطاق الترددي المتطورة &copy; 2026</p>
+    <p style="font-size:0.78rem;margin-top:4px">Built with ESP-IDF v6.x, FreeRTOS, lwIP NAPT, and Glassmorphic RTL UI</p>
+  </footer>
+
+</div>
+
+<script>
+// Theme Switcher
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('preferred_theme', theme);
+  document.getElementById('btnSunset').classList.toggle('active', theme === 'sunset');
+  document.getElementById('btnMatrix').classList.toggle('active', theme === 'matrix');
+}
+
+// Init theme from storage
+const savedTheme = localStorage.getItem('preferred_theme') || 'sunset';
+setTheme(savedTheme);
+
+// Tab Switcher
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-link').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById(tabId);
+  if (target) target.classList.add('active');
+  const btn = Array.from(document.querySelectorAll('.tab-link')).find(b => b.getAttribute('onclick').includes(tabId));
+  if (btn) btn.classList.add('active');
+}
+
+// Iframe Toolbar
+function setIframeWidth(width, btn) {
+  document.getElementById('previewIframe').style.width = width;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+function reloadIframe() {
+  const ifr = document.getElementById('previewIframe');
+  ifr.src = ifr.src;
+}
+
+// Copy flash command
+function copyFlashCmd() {
+  const text = document.getElementById('flashCmdText').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    alert('تم نسخ أمر الحرق إلى الحافظة بنجاح!\n' + text);
+  });
+}
+
+// Telegram Interactive Simulator
+let currentRole = 'admin';
+
+const roleData = {
+  admin: { name: 'المدير العام', chatId: '987654321', type: 'admin' },
+  single: { name: 'محمد (هاتف سامسونج)', chatId: '11223344', type: 'single' },
+  multi: { name: 'أحمد (هاتف + لابتوب)', chatId: '55667788', type: 'multi' },
+  unregistered: { name: 'مستخدم جديد', chatId: '99887766', type: 'unregistered' }
+};
+
+function selectRole(role, el) {
+  currentRole = role;
+  document.querySelectorAll('.sim-role-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  appendTgMsg('system', `🔄 تم التبديل إلى دور: <b>${roleData[role].name}</b> (Chat ID: <code>${roleData[role].chatId}</code>)`);
+}
+
+function handleTgKey(e) {
+  if (e.key === 'Enter') sendTgMessage();
+}
+
+function sendTgCommand(cmd) {
+  document.getElementById('tgInput').value = cmd;
+  sendTgMessage();
+}
+
+function sendTgMessage() {
+  const input = document.getElementById('tgInput');
+  const txt = input.value.trim();
+  if (!txt) return;
+  input.value = '';
+
+  appendTgMsg('outgoing', txt);
+
+  setTimeout(() => {
+    processTgReply(txt);
+  }, 400);
+}
+
+function appendTgMsg(type, html, extraHtml = '') {
+  const area = document.getElementById('tgMessages');
+  const div = document.createElement('div');
+  div.className = 'tg-msg ' + (type === 'outgoing' ? 'outgoing' : 'incoming');
+  if (type === 'system') {
+    div.style.background = 'rgba(0,0,0,0.4)';
+    div.style.fontSize = '0.78rem';
+    div.style.color = '#94a3b8';
+    div.style.textAlign = 'center';
+    div.style.alignSelf = 'center';
+    div.style.maxWidth = '95%';
+  }
+  div.innerHTML = html + extraHtml;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function processTgReply(text) {
+  const role = roleData[currentRole];
+  const t = text.toLowerCase();
+
+  // 1. Unregistered user
+  if (role.type === 'unregistered') {
+    appendTgMsg('incoming', 
+      `👋 <b>مرحباً بك في بوت راوتر ESP32 الذكي!</b>\n\n` +
+      `معرف حسابك هو:\n<code>${role.chatId}</code>\n\n` +
+      `⚠️ <i>حسابك غير مسجل بعد في نظام الراوتر.</i>\nيرجى تزويد مدير الشبكة بهذا المعرف لربطه بأجهزتك وتفعيل الإشعارات والاستعلام المباشر.`
+    );
+    return;
+  }
+
+  // 2. Single Device User
+  if (role.type === 'single') {
+    if (t.includes('استهلاك') || t.includes('باقي') || t.includes('quota') || t.includes('/quota') || t.includes('/start')) {
+      appendTgMsg('incoming',
+        `📱 <b>تقرير جهازك: هاتف سامسونج S24</b>\n\n` +
+        `🌐 <b>عنوان IP:</b> <code>192.168.4.2</code>\n` +
+        `📶 <b>حالة الاتصال:</b> 🟢 متصل بالواي فاي\n` +
+        `📊 <b>حصة الباقة:</b> 30.00 GB (متبقي 17.65 GB - 41%)\n` +
+        `📥 <b>إجمالي الاستهلاك:</b> 12.35 GB\n` +
+        `   • ⬇️ تحميل: 10.80 GB\n` +
+        `   • ⬆️ رفع: 1.55 GB\n` +
+        `⚡ <b>السرعة اللحظية:</b> ⬇️ 4.25 Mbps | ⬆️ 0.85 Mbps\n` +
+        `🛡️ <b>سقف السرعة:</b> ⬇️ 15.0 Mbps | ⬆️ 5.0 Mbps`
+      );
+    } else {
+      appendTgMsg('incoming', `💡 أهلاً بك! يمكنك إرسال كلمة <code>استهلاك</code> أو <code>/quota</code> لمعرفة رصيدك المتبقي وسرعتك الحالية.`);
+    }
+    return;
+  }
+
+  // 3. Multi Device User
+  if (role.type === 'multi') {
+    if (t.includes('استهلاك') || t.includes('باقي') || t.includes('quota') || t.includes('/quota') || t.includes('/start')) {
+      const keyboardHtml = `
+        <div class="tg-inline-kbd">
+          <button class="tg-btn" onclick="inspectDev('phone')">📱 هاتف أحمد</button>
+          <button class="tg-btn" onclick="inspectDev('laptop')">💻 لابتوب العمل</button>
+        </div>
+      `;
+      appendTgMsg('incoming',
+        `👥 <b>تقرير أجهزتك المرتبطة (جهازين):</b>\n\n` +
+        `1️⃣ <b>هاتف أحمد:</b> 14.20 GB / 25.00 GB (56%)\n` +
+        `2️⃣ <b>لابتوب العمل:</b> 42.10 GB / 70.00 GB (60%)\n\n` +
+        `📊 <b>إجمالي استهلاكك:</b> 56.30 GB من 95.00 GB\n` +
+        `⏳ <b>المتبقي الكلي:</b> 38.70 GB\n\n` +
+        `👇 <i>اضغط على أي جهاز لعرض تفاصيله الدقيقة:</i>`,
+        keyboardHtml
+      );
+    } else {
+      appendTgMsg('incoming', `💡 لديك جهازان مسجلان في الشبكة. أرسل كلمة <code>استهلاك</code> لعرض الأجهزة واختيار أي منها.`);
+    }
+    return;
+  }
+
+  // 4. Admin Role
+  if (role.type === 'admin') {
+    if (t.includes('/start')) {
+      appendTgMsg('incoming',
+        `👑 <b>مرحباً بك يا مدير الشبكة في بوت راوتر ESP32!</b>\n\n` +
+        `الأوامر المتاحة لك:\n` +
+        `• <code>/quota</code> أو <code>استهلاك</code> - حالة باقة الإنترنت العامة.\n` +
+        `• <code>/all</code> أو <code>/devices</code> - تقرير بجميع الأجهزة المتصلة.\n` +
+        `• <code>/status</code> - إحصائيات النظام والذاكرة والحرارة.\n` +
+        `• <code>/speed [IP] [Down] [Up]</code> - تعديل السرعة لجهاز.\n` +
+        `• <code>/block [IP]</code> أو <code>/unblock [IP]</code> - حظر أو فك حظر جهاز.`
+      );
+    } else if (t.includes('/quota') || t.includes('استهلاك') || t.includes('باقي')) {
+      appendTgMsg('incoming',
+        `🌐 <b>تقرير باقة الإنترنت العامة (ISP):</b>\n\n` +
+        `📦 <b>سعة الباقة:</b> 140.00 GB\n` +
+        `📥 <b>المستهلك الكلي:</b> 88.50 GB (63%)\n` +
+        `⏳ <b>المتبقي:</b> 51.50 GB\n` +
+        `📅 <b>موعد التجديد:</b> بعد 12 يوم\n` +
+        `⚡ <b>السرعة الحالية:</b> ⬇️ 14.80 Mbps | ⬆️ 3.40 Mbps\n` +
+        `📶 <b>الأجهزة النشطة:</b> 6 أجهزة متصلة`
+      );
+    } else if (t.includes('/all') || t.includes('/devices') || t.includes('أجهزة')) {
+      appendTgMsg('incoming',
+        `📱 <b>الأجهزة النشطة المتصلة بالراوتر:</b>\n\n` +
+        `1. <b>هاتف محمد</b> [192.168.4.2] - 12.35 GB | ⬇️ 4.2M\n` +
+        `2. <b>لابتوب العمل</b> [192.168.4.3] - 42.10 GB | ⬇️ 6.8M\n` +
+        `3. <b>جهاز البلايستيشن 🎮</b> [192.168.4.5] - 25.40 GB | VIP\n` +
+        `4. <b>شاشة المعيشة</b> [192.168.4.6] - 8.65 GB\n\n` +
+        `<i>إجمالي المتصلين: 4 أجهزة مسجلة + جهازين كضيوف.</i>`
+      );
+    } else if (t.includes('/status') || t.includes('حالة')) {
+      appendTgMsg('incoming',
+        `ℹ️ <b>حالة نظام راوتر ESP32:</b>\n\n` +
+        `⏱️ <b>وقت التشغيل:</b> 4 أيام و 14 ساعة\n` +
+        `🧠 <b>الذاكرة الحرة (Free RAM):</b> 184 KB\n` +
+        `⚡ <b>تردد المعالج:</b> 240 MHz (Dual Core)\n` +
+        `🌡️ <b>حرارة المعالج:</b> 46.2 °C\n` +
+        `📶 <b>قوة إشارة الواي فاي:</b> -58 dBm (ممتازة)\n` +
+        `🚀 <b>إصدار الفيرموير:</b> v2.4.0 (ESP-IDF v6.1)`
+      );
+    } else {
+      appendTgMsg('incoming', `✅ تم استلام أمر الأدمن: <code>${text}</code> بنجاح.`);
+    }
+  }
+}
+
+function inspectDev(devType) {
+  if (devType === 'phone') {
+    appendTgMsg('incoming',
+      `📱 <b>تفاصيل: هاتف أحمد</b>\n\n` +
+      `🌐 <b>عنوان IP:</b> <code>192.168.4.4</code>\n` +
+      `📶 <b>الاتصال:</b> 🟢 متصل\n` +
+      `📊 <b>الكوتا:</b> 25.00 GB (متبقي 10.80 GB - 56%)\n` +
+      `⚡ <b>السرعة اللحظية:</b> ⬇️ 3.1 Mbps | ⬆️ 0.4 Mbps\n` +
+      `🛡️ <b>سقف السرعة:</b> ⬇️ 10.0 Mbps | ⬆️ 3.0 Mbps`
+    );
+  } else if (devType === 'laptop') {
+    appendTgMsg('incoming',
+      `💻 <b>تفاصيل: لابتوب العمل</b>\n\n` +
+      `🌐 <b>عنوان IP:</b> <code>192.168.4.7</code>\n` +
+      `📶 <b>الاتصال:</b> 🟢 متصل\n` +
+      `📊 <b>الكوتا:</b> 70.00 GB (متبقي 27.90 GB - 60%)\n` +
+      `⚡ <b>السرعة اللحظية:</b> ⬇️ 8.5 Mbps | ⬆️ 2.1 Mbps\n` +
+      `🛡️ <b>سقف السرعة:</b> ⬇️ 25.0 Mbps | ⬆️ 10.0 Mbps`
+    );
+  }
+}
+
+function simPushAlert(type) {
+  if (type === 'global') {
+    appendTgMsg('incoming',
+      `🚨 <b>تنبيه استهلاك باقة الإنترنت الأساسية!</b>\n\n` +
+      `لقد تم استهلاك <b>90%</b> من سعة الباقة المقررة.\n` +
+      `• المستهلك: <b>126.00 GB</b> من أصل 140.00 GB\n` +
+      `• المتبقي: <b>14.00 GB</b> فقط\n` +
+      `• موعد التجديد: بعد 4 أيام`
+    );
+  } else {
+    appendTgMsg('incoming',
+      `⚠️ <b>تحذير تجاوز كوتا جهاز: لابتوب العمل</b>\n\n` +
+      `تجاوز استهلاك الجهاز نسبة <b>75%</b> من كوتته المخصصة.\n` +
+      `• المستهلك: <b>52.50 GB</b> من أصل 70.00 GB\n` +
+      `• المتبقي: <b>17.50 GB</b>\n` +
+      `💡 يرجى ترشيد الاستهلاك حتى لا يتم إيقاف الخدمة تلقائياً عند 100%.`
+    );
+  }
+}
+</script>
+
+</body>
+</html>

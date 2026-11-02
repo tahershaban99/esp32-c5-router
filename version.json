@@ -1,0 +1,6 @@
+{
+  "version": "v3.2.0-PRO",
+  "release_date": "2026-11-01",
+  "firmware_url": "https://raw.githubusercontent.com/tahershaban99/ESP32-Pro-Router-NAPT/main/bin/esp32_napt_router.bin",
+  "changelog": "إصدار احترافي متكامل: بوت تيليجرام تفاعلي متقدم وسحب استهلاك فوري، تنبيهات تلقائية متعددة الحدود للأجهزة، تحكم في كوتا وسرعة كل جهاز، ونظام تحديث هوائي ثنائي OTA مع Anti-Rollback."
+}

@@ -1,0 +1,3439 @@
+<!doctype html>
+<html lang="ar" dir="rtl" data-theme="sunset">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>راوتر ESP32-C5 فائق السرعة (5GHz Wi-Fi 6)</title>
+<style>
+:root[data-theme='sunset']{
+  --bg-gradient: radial-gradient(circle at 20% 20%, #1f1435 0%, #120f24 50%, #0a0b16 100%);
+  --glass-bg: rgba(28, 25, 48, 0.65);
+  --glass-header: rgba(35, 30, 60, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-hover: rgba(244, 63, 94, 0.4);
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --accent: #f43f5e;
+  --accent-hover: #fb7185;
+  --accent-grad: linear-gradient(135deg, #e11d48, #f97316);
+  --accent-shadow: rgba(225, 29, 72, 0.35);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  --green: #10b981;
+  --red: #ef4444;
+  --amber: #f59e0b;
+  --cyan: #06b6d4;
+  --badge-gaming-bg: rgba(6, 182, 212, 0.15);
+  --badge-gaming-border: rgba(6, 182, 212, 0.4);
+  --badge-gaming-color: #22d3ee;
+  --flow-down-color: #c084fc;
+  --flow-down-bg: rgba(192, 132, 252, 0.12);
+  --flow-down-border: rgba(192, 132, 252, 0.25);
+  --flow-up-color: #fb923c;
+  --flow-up-bg: rgba(251, 146, 60, 0.12);
+  --flow-up-border: rgba(251, 146, 60, 0.25);
+}
+:root[data-theme='matrix']{
+  --bg-gradient: radial-gradient(circle at 30% 20%, #0d2217 0%, #0a1811 50%, #050d09 100%);
+  --glass-bg: rgba(13, 29, 21, 0.65);
+  --glass-header: rgba(16, 38, 27, 0.75);
+  --glass-border: rgba(0, 255, 157, 0.18);
+  --glass-border-hover: rgba(0, 255, 157, 0.45);
+  --text: #ecfdf5;
+  --muted: #6ee7b7;
+  --accent: #00ff9d;
+  --accent-hover: #34d399;
+  --accent-grad: linear-gradient(135deg, #059669, #00ff9d);
+  --accent-shadow: rgba(0, 255, 157, 0.25);
+  --card-shadow: 0 8px 32px 0 rgba(0, 255, 157, 0.08);
+  --green: #00ff9d;
+  --red: #f43f5e;
+  --amber: #fbbf24;
+  --cyan: #38bdf8;
+  --badge-gaming-bg: rgba(56, 189, 248, 0.15);
+  --badge-gaming-border: rgba(56, 189, 248, 0.4);
+  --badge-gaming-color: #7dd3fc;
+  --flow-down-color: #00ff9d;
+  --flow-down-bg: rgba(0, 255, 157, 0.1);
+  --flow-down-border: rgba(0, 255, 157, 0.25);
+  --flow-up-color: #38bdf8;
+  --flow-up-bg: rgba(56, 189, 248, 0.1);
+  --flow-up-border: rgba(56, 189, 248, 0.25);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg-gradient);
+  background-attachment:fixed;
+  color:var(--text);
+  padding:14px;
+  line-height:1.5;
+  font-size:14.5px;
+  min-height:100vh;
+}
+main{width:96%;max-width:1480px;margin:0 auto}
+.glass{
+  background:var(--glass-bg);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--glass-border);
+  border-radius:14px;
+  box-shadow:var(--card-shadow);
+  transition:all .25s ease;
+}
+.glass:hover{border-color:var(--glass-border-hover)}
+
+/* GLOBAL ZOOM / SCALE CONTROLLER */
+body {
+  zoom: 0.85;
+}
+.zoom-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 3px 6px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  user-select: none;
+}
+.zoom-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+}
+.zoom-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--accent);
+  color: #fff;
+  transform: scale(1.1);
+}
+.zoom-value {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--cyan);
+  min-width: 36px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0 3px;
+  letter-spacing: 0.5px;
+}
+.zoom-value:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.header{
+  position: sticky;
+  top: 8px;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  margin-bottom: 14px;
+  gap: 12px;
+  background: var(--glass-header);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  transition: all 0.25s ease;
+}
+.header.scrolled{
+  padding: 8px 18px;
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.7);
+  background: rgba(22, 17, 40, 0.94);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+[data-theme='matrix'] .header.scrolled{
+  background: rgba(8, 22, 16, 0.94);
+}
+.header h1{font-size:1.35rem;display:flex;align-items:center;gap:10px;font-weight:700}
+.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.theme-switcher{
+  display:inline-flex;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);
+  border-radius:30px;padding:3px;gap:3px;
+}
+.theme-btn{
+  background:none;border:none;color:var(--muted);padding:5px 12px;border-radius:20px;
+  font-size:0.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;
+  transition:all .2s;
+}
+.theme-btn.active{
+  background:var(--accent-grad);color:#fff;box-shadow:0 2px 10px var(--accent-shadow);
+}
+.wan-badge{
+  display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:30px;
+  font-size:0.85rem;font-weight:700;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);
+}
+.pulse{width:9px;height:9px;border-radius:50%;display:inline-block}
+.pulse.online{background:var(--green);box-shadow:0 0 10px var(--green)}
+.pulse.offline{background:var(--red);box-shadow:0 0 10px var(--red)}
+
+.auth-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:6px 14px;
+  border-radius:30px;font-size:0.82rem;font-weight:700;
+  background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);
+  color:#f1f5f9;cursor:pointer;transition:all .2s ease;
+}
+.auth-btn:hover{
+  background:rgba(255,255,255,0.12);border-color:var(--accent);
+  transform:translateY(-1px);
+}
+.auth-btn.admin-active{
+  background:linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(6, 182, 212, 0.22));
+  border:1px solid rgba(16, 185, 129, 0.6);
+  color:#6ee7b7;box-shadow:0 2px 12px rgba(16, 185, 129, 0.25);
+}
+.auth-btn.admin-active:hover{
+  background:linear-gradient(135deg, rgba(16, 185, 129, 0.35), rgba(6, 182, 212, 0.35));
+  border-color:#10b981;
+}
+
+
+/* FLOATING RIGHT SIDEBAR TABS DOCK */
+
+/* FLOATING LEFT METRICS DOCK (WIDE SCREENS ONLY) */
+.floating-metrics-dock {
+  position: fixed;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-140%);
+  opacity: 0;
+  pointer-events: none;
+  background: var(--glass-header);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 10px 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 9998;
+  min-width: 132px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  user-select: none;
+}
+
+.floating-metrics-dock.visible {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fmd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px 6px 6px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 2px;
+}
+
+.fmd-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+
+.fmd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.fmd-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
+}
+
+.fmd-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.fmd-details {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.fmd-label {
+  font-size: 0.64rem;
+  color: var(--muted);
+}
+
+.fmd-val {
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Hide on screens smaller than 1150px */
+@media (max-width: 1149px) {
+  .floating-metrics-dock {
+    display: none !important;
+  }
+}
+
+.floating-tabs-dock {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%) translateX(130%);
+  opacity: 0;
+  pointer-events: none;
+  background: var(--glass-header);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 10px 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  z-index: 9999;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.floating-tabs-dock.visible {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.floating-tab-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  font-family: inherit;
+  text-align: right;
+}
+
+.floating-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--accent);
+  transform: translateX(-4px);
+}
+
+.floating-tab-btn.active {
+  background: var(--accent-grad);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--accent-shadow);
+}
+
+.ft-icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.ft-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ft-divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 3px 0;
+}
+
+.ft-top-btn {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.3);
+  color: var(--cyan);
+}
+
+.ft-top-btn:hover {
+  background: rgba(6, 182, 212, 0.25);
+  border-color: var(--cyan);
+  color: #fff;
+}
+
+/* Responsive for Mobile */
+@media (max-width: 768px) {
+  
+/* FLOATING LEFT METRICS DOCK (WIDE SCREENS ONLY) */
+.floating-metrics-dock {
+  position: fixed;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-140%);
+  opacity: 0;
+  pointer-events: none;
+  background: var(--glass-header);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 10px 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  z-index: 9998;
+  min-width: 132px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  user-select: none;
+}
+
+.floating-metrics-dock.visible {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fmd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px 6px 6px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 2px;
+}
+
+.fmd-title {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+}
+
+.fmd-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.fmd-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(3px);
+}
+
+.fmd-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.fmd-details {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.fmd-label {
+  font-size: 0.64rem;
+  color: var(--muted);
+}
+
+.fmd-val {
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Hide on screens smaller than 1150px */
+@media (max-width: 1149px) {
+  .floating-metrics-dock {
+    display: none !important;
+  }
+}
+
+.floating-tabs-dock {
+    right: 8px;
+    top: auto;
+    bottom: 24px;
+    transform: translateY(0) translateX(130%);
+    border-radius: 30px;
+    padding: 8px 6px;
+    gap: 5px;
+  }
+  .floating-tabs-dock.visible {
+    transform: translateY(0) translateX(0);
+  }
+  .ft-text {
+    display: none !important;
+  }
+  .floating-tab-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+  }
+  .floating-tab-btn:hover {
+    transform: scale(1.1);
+  }
+}
+
+.tabs{
+  display:flex;gap:8px;margin-bottom:18px;border-bottom:1px solid var(--glass-border);
+  padding-bottom:10px;overflow-x:auto;scrollbar-width:none;width:100%;
+}
+.tab-btn{
+  flex:1 1 0;min-width:max-content;justify-content:center;text-align:center;
+  background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);color:var(--muted);
+  padding:10px 16px;border-radius:12px;font-size:0.88rem;font-weight:700;cursor:pointer;
+  transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:7px;
+}
+.tab-btn:hover{color:var(--text);border-color:var(--accent)}
+.tab-btn.active{
+  background:var(--accent-grad);color:#fff;border-color:transparent;
+  box-shadow:0 4px 16px var(--accent-shadow);
+}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.metrics-grid{
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.metric-card{
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  text-align: center;
+  justify-content: center;
+}
+.metric-label{
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.metric-value{
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.metric-sub{
+  font-size: 0.67rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media(max-width:1080px){
+  .metrics-grid{
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 8px;
+    padding-bottom: 6px;
+    scrollbar-width: thin;
+  }
+  .metric-card{
+    flex: 0 0 152px;
+    min-width: 152px;
+    scroll-snap-align: start;
+  }
+}
+.graph-card{padding:14px 18px;margin-bottom:14px}
+.graph-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.graph-title{font-size:0.95rem;font-weight:700;display:flex;align-items:center;gap:6px}
+.graph-legend{display:flex;gap:12px;font-size:0.8rem;font-weight:600}
+.legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-left:4px}
+canvas{width:100%!important;height:130px!important;border-radius:8px;background:rgba(0,0,0,0.25)}
+.card-section{padding:18px 20px;margin-bottom:14px}
+.card-section h2{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.card-section p.note{font-size:0.82rem;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.view-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px}
+.cards-view{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.table-view{display:none;overflow-x:auto}
+@media(max-width:900px){
+  .view-btns{display:none!important}
+  .table-view{display:none!important}
+  .cards-view{display:grid!important;grid-template-columns:1fr!important}
+}
+.dev-card{padding:16px;display:flex;flex-direction:column;gap:12px}
+.dev-card.blocked{border-color:rgba(239,68,68,0.5);background:rgba(40,15,20,0.6)}
+.dev-card.quota-exceeded{border-color:var(--red);box-shadow:0 0 16px rgba(239,68,68,0.3)}
+.dev-card.gaming{border-color:var(--badge-gaming-border);box-shadow:0 0 16px var(--badge-gaming-border)}
+.dev-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.dev-title{font-size:1.05rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px}
+.dev-sub{font-size:0.78rem;color:var(--muted);font-family:monospace;direction:ltr;text-align:right}
+.badge{font-size:0.75rem;padding:3px 10px;border-radius:20px;font-weight:700}
+.badge-online{background:rgba(16,185,129,0.15);color:var(--green);border:1px solid rgba(16,185,129,0.3)}
+.badge-offline{background:rgba(148,163,184,0.15);color:var(--muted);border:1px solid rgba(148,163,184,0.3)}
+.badge-blocked{background:rgba(239,68,68,0.2);color:var(--red);border:1px solid rgba(239,68,68,0.4)}
+.badge-gaming{background:var(--badge-gaming-bg);color:var(--badge-gaming-color);border:1px solid var(--badge-gaming-border)}
+.stats-box{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px;border-radius:10px;
+  background:rgba(0,0,0,0.25);border:1px solid var(--glass-border);text-align:center;
+}
+.stats-box .lbl{font-size:0.72rem;color:var(--muted)}
+.stats-box .val{font-size:0.95rem;font-weight:700;color:#fff;margin-top:2px}
+.progress-bg{height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:4px;background:var(--accent-grad);transition:width .4s}
+.quota-box{
+  font-size:0.8rem;color:var(--muted);background:rgba(0,0,0,0.2);padding:8px 12px;
+  border-radius:8px;border:1px solid var(--glass-border);
+}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap}
+button.action-btn{
+  flex:1;min-width:70px;padding:8px 10px;border-radius:8px;border:none;cursor:pointer;
+  font-size:0.82rem;font-weight:700;transition:all .2s;display:inline-flex;align-items:center;
+  justify-content:center;gap:4px;
+}
+.btn-gaming{background:var(--badge-gaming-bg);color:var(--badge-gaming-color);border:1px solid var(--badge-gaming-border)}
+.btn-gaming:hover{background:rgba(6,182,212,0.3)}
+.btn-block{background:rgba(239,68,68,0.2);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.btn-unblock{background:rgba(16,185,129,0.2);color:var(--green);border:1px solid rgba(16,185,129,0.3)}
+.btn-reset{background:rgba(245,158,11,0.2);color:var(--amber);border:1px solid rgba(245,158,11,0.3)}
+.btn-delete{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.25)}
+.primary-btn{
+  background:var(--accent-grad);color:#fff;border:none;padding:11px 18px;border-radius:10px;
+  font-weight:700;cursor:pointer;box-shadow:0 3px 12px var(--accent-shadow);transition:all .2s;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:0.92rem;
+}
+.primary-btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.danger-btn{
+  background:linear-gradient(135deg,#b91c1c,#ef4444);color:#fff;border:none;padding:11px 18px;
+  border-radius:10px;font-weight:700;cursor:pointer;transition:all .2s;font-size:0.92rem;
+}
+table{width:100%;border-collapse:collapse;table-layout:auto}
+th,td{padding:8px 6px;border-bottom:1px solid var(--glass-border);text-align:center;font-size:12px}
+th{color:var(--muted);background:rgba(0,0,0,0.3);font-weight:700}
+input,select{
+  width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--glass-border);
+  background:rgba(0,0,0,0.3);color:var(--text);font-size:14px;outline:none;
+}
+input:focus,select:focus{border-color:var(--accent)}
+.form-group{margin-bottom:12px}
+.form-group label{font-size:0.84rem;color:var(--muted);font-weight:600;display:block;margin-bottom:4px}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.form-row-2{grid-template-columns:1fr}}
+.checkbox-label{display:inline-flex;align-items:center;gap:8px;font-size:0.86rem;font-weight:600;cursor:pointer}
+.checkbox-label input[type='checkbox']{width:auto;cursor:pointer}
+.modal-backdrop{
+  position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;z-index:9999;padding:14px;
+}
+.modal-card{
+  width:100%;max-width:440px;background:var(--glass-bg);backdrop-filter:blur(25px);
+  border:1px solid var(--glass-border);border-radius:16px;padding:24px;position:relative;
+  box-shadow:0 12px 48px rgba(0,0,0,0.6);
+}
+.modal-close{
+  position:absolute;top:16px;left:16px;background:none;border:none;color:var(--muted);
+  font-size:1.4rem;cursor:pointer;line-height:1;
+}
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{padding-left:40px}
+.pw-toggle{
+  position:absolute;left:8px;background:none;border:none;color:var(--muted);cursor:pointer;
+  padding:4px 6px;font-size:1rem;
+}
+.lockout-banner{
+  display:none;background:rgba(239,68,68,0.2);border:1px solid var(--red);color:#fecaca;
+  padding:10px 14px;border-radius:8px;font-size:0.84rem;margin-bottom:12px;font-weight:700;
+}
+.info-box{
+  background:rgba(0,0,0,0.25);border:1px solid var(--glass-border);padding:12px 14px;
+  border-radius:10px;font-size:0.84rem;line-height:1.6;color:var(--muted);
+}
+.quota-mini-bar{height:6px;width:100%;max-width:80px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin:3px auto 2px auto}
+.quota-mini-fill{height:100%;border-radius:4px;transition:width .3s}
+.dev-controls-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:8px 0;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px;border:1px solid var(--glass-border)}
+.dev-controls-grid label{font-size:0.72rem;color:var(--muted);display:block;margin-bottom:2px}
+.dev-controls-grid input{padding:4px 6px;font-size:0.8rem;text-align:center}
+.ota-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+@media(max-width:650px){.ota-grid{grid-template-columns:1fr}}
+.ota-box{background:rgba(0,0,0,0.25);border:1px solid var(--glass-border);padding:14px;border-radius:12px}
+
+/* MOBILE & RESPONSIVE FLEXIBLE ENHANCEMENTS (< 768px) */
+@media(max-width: 768px) {
+  body {
+    padding: 8px 6px !important;
+  }
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .header {
+    padding: 12px 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .header h1 {
+    font-size: 1.15rem !important;
+    justify-content: center !important;
+  }
+  .header-actions {
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+  .wan-badge {
+    padding: 5px 10px !important;
+    font-size: 0.78rem !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .cards-view {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .dev-card {
+    padding: 14px 12px !important;
+    border-radius: 14px !important;
+  }
+  .dev-controls-grid {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .btn-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .btn-row .action-btn {
+    flex: 1 1 calc(50% - 6px) !important;
+    padding: 8px 6px !important;
+    font-size: 0.78rem !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  .card-section {
+    padding: 14px 12px !important;
+  }
+  .table-view {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+  }
+  table {
+    min-width: 680px !important;
+  }
+  .tabs {
+    gap: 6px !important;
+    padding-bottom: 6px !important;
+  }
+  .tab-btn {
+    padding: 8px 12px !important;
+    font-size: 0.8rem !important;
+  }
+}
+
+
+    .perf-preset-btn {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-align: center;
+    }
+    .perf-preset-btn:hover {
+      border-color: var(--green);
+      background: rgba(16, 185, 129, 0.08);
+      color: #fff;
+    }
+    .perf-preset-btn.active {
+      border: 1.5px solid var(--green) !important;
+      background: rgba(16, 185, 129, 0.16) !important;
+      color: #fff !important;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.25);
+      font-weight: 700;
+    }
+
+
+input[type="checkbox"], .checkbox-label input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  max-width: 18px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  cursor: pointer;
+  accent-color: #10b981;
+  flex-shrink: 0;
+}
+
+
+.flow-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 92px;
+}
+.flow-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+.flow-line.down {
+  color: var(--flow-down-color);
+  background: var(--flow-down-bg);
+  border: 1px solid var(--flow-down-border);
+}
+.flow-line.up {
+  color: var(--flow-up-color);
+  background: var(--flow-up-bg);
+  border: 1px solid var(--flow-up-border);
+}
+.flow-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+  opacity: 0.9;
+}
+.flow-val {
+  font-family: monospace, -apple-system, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: -0.2px;
+}
+
+
+/* UNIFIED DUAL-STACKED GLASS CAPSULES FOR DEVICES TABLE */
+.device-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.dev-name-input {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.86rem;
+  padding: 2px 6px;
+  width: 130px;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+}
+.dev-name-input:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.25);
+}
+.dev-name-input:focus {
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 10px var(--accent-shadow);
+}
+.dev-name-input-card {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.95rem;
+  padding: 2px 6px;
+  width: 150px;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+}
+.dev-name-input-card:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(0, 0, 0, 0.25);
+}
+.dev-name-input-card:focus {
+  border-color: var(--accent);
+  background: rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 10px var(--accent-shadow);
+}
+.rename-icon {
+  font-size: 0.72rem;
+  opacity: 0.4;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 2px;
+}
+.device-pill:hover .rename-icon, .dev-name:hover .rename-icon {
+  opacity: 0.95;
+  transform: scale(1.15);
+}
+
+.device-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.dev-type-icon {
+  font-size: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+.dev-name-txt {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.net-addr-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 105px;
+}
+.ip-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cyan);
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+}
+.mac-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.quota-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: stretch;
+  justify-content: center;
+  min-width: 112px;
+}
+.quota-line-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.quota-line-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+</style>
+</head>
+<body>
+<main>
+<header class="header glass">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1>🌐 <span>راوتر ESP32-C5 فائق السرعة</span> <span class="badge" style="background:linear-gradient(135deg,#00f2fe,#4facfe);color:#000;font-size:11px;font-weight:bold;padding:2px 8px;border-radius:12px;vertical-align:middle;margin-right:6px">⚡ 5GHz Wi-Fi 6</span></h1>
+    <!-- FULL-PAGE ZOOM / SCALE CONTROLLER -->
+    <div class="zoom-capsule" title="التحكم في نسبة تكبير وتصغير صفحة التحكم بالكامل">
+      <button type="button" class="zoom-btn" onclick="adjustZoom(-5)" title="تصغير الصفحة [-5%]">➖</button>
+      <span class="zoom-value" id="zoom-display" onclick="resetZoom()" title="انقر للتبديل بين 85% و 100%">85%</span>
+      <button type="button" class="zoom-btn" onclick="adjustZoom(5)" title="تكبير الصفحة [+5%]">➕</button>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="theme-switcher">
+      <button class="theme-btn active" id="btn-theme-sunset" onclick="setTheme('sunset')">🌅 الغروب الكوني</button>
+      <button class="theme-btn" id="btn-theme-matrix" onclick="setTheme('matrix')">⚡ الأخضر السيبراني</button>
+    </div>
+    <div class="wan-badge" id="wan-status">
+      <span class="pulse offline" id="wan-pulse"></span>
+      <span id="wan-text">جاري الفحص...</span>
+    </div>
+    <button class="auth-btn" id="auth-btn" onclick="handleAuthClick()" title="تسجيل الدخول كمشرف لتعديل الإعدادات"><span>👁️</span> <span>وضع المراقبة (دخول المشرف)</span></button>
+  </div>
+</header>
+
+<div class="metrics-grid">
+  <div class="metric-card glass">
+    <span class="metric-label">🚀 سرعة التحميل اللحظية</span>
+    <span class="metric-value" id="cur-down-mbps" style="color:var(--green)">0.00 Mbps</span>
+    <span class="metric-sub" id="cur-down-raw">0 KB/s</span>
+  </div>
+  <div class="metric-card glass">
+    <span class="metric-label">📤 سرعة الرفع اللحظية</span>
+    <span class="metric-value" id="cur-up-mbps" style="color:var(--accent)">0.00 Mbps</span>
+    <span class="metric-sub" id="cur-up-raw">0 KB/s</span>
+  </div>
+  <div class="metric-card glass">
+    <span class="metric-label">👥 الأجهزة المتصلة حالياً</span>
+    <span class="metric-value" id="active-clients-str">0 / 12 متصل</span>
+    <span class="metric-sub">السعة القصوى: 12 واي فاي / 32 L3</span>
+  </div>
+  <div class="metric-card glass">
+    <span class="metric-label">📊 استهلاك باقة النت</span>
+    <span class="metric-value" id="quota-summary-val">-- / -- GB</span>
+    <div class="progress-bg"><div class="progress-fill" id="quota-summary-bar" style="width:0%"></div></div>
+  </div>
+  <div class="metric-card glass">
+    <span class="metric-label">🧠 الذاكرة المتاحة (RAM)</span>
+    <span class="metric-value" id="free-heap-kb" style="color:var(--cyan)">-- KB</span>
+    <span class="metric-sub" id="min-heap-kb">أدنى ذاكرة: -- KB</span>
+  </div>
+  <div class="metric-card glass">
+    <span class="metric-label">⏱️ مدة التشغيل (Uptime)</span>
+    <span class="metric-value" id="uptime-str">--</span>
+    <span class="metric-sub" id="cpu-clock-str">240 MHz</span>
+  </div>
+  <div class="metric-card glass" style="border:1px solid rgba(16,185,129,0.35);background:rgba(16,185,129,0.05)">
+    <span class="metric-label">📡 شبكة الإنترنت المزودة (WAN)</span>
+    <span class="metric-value" id="wan-ssid-val" style="color:var(--green);font-size:1.18rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">--</span>
+    <span class="metric-sub" id="wan-info-sub">جاري الفحص...</span>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" onclick="switchTab('tab-devices', this)">👥 الأجهزة والسرعات</button>
+  <button class="tab-btn" onclick="switchTab('tab-period', this)">🌐 باقة النت والدورة</button>
+  <button class="tab-btn" onclick="switchTab('tab-telegram', this)">🤖 تنبيهات التيليجرام</button>
+  <button class="tab-btn" onclick="switchTab('tab-reboot', this)">📊 المراقبة وإعادة التشغيل (الريستارت)</button>
+    <button class="tab-btn" onclick="switchTab('tab-settings', this)">⚙️ إعدادات الجهاز والوايفاي</button>
+</nav>
+
+<!-- TAB 1: DEVICES -->
+<section id="tab-devices" class="tab-content active">
+  <div class="view-bar">
+    <div style="font-weight:700;font-size:1.05rem;color:#fff">الأجهزة والتحكم في الكوتة والسرعات (<span id="dev-count-txt">0</span>)</div>
+    <div class="view-btns theme-switcher">
+      <button class="theme-btn active" id="btn-view-cards" onclick="setViewMode('cards')">بطاقات (Cards)</button>
+      <button class="theme-btn" id="btn-view-table" onclick="setViewMode('table')">جدول (Table)</button>
+    </div>
+  </div>
+
+  <!-- SECTION 1: CONNECTED DEVICES -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <h3 style="font-size:1.05rem;color:#fff;display:flex;align-items:center;gap:8px">
+      <span>🟢</span> الأجهزة المتصلة حالياً
+      <span class="badge badge-online" id="connected-count-badge">0 متصل</span>
+    </h3>
+    <span style="font-size:0.78rem;color:var(--muted)">تحديث لحظي للسرعة ومعدل النقل</span>
+  </div>
+
+  <div class="cards-view" id="cards-container"></div>
+  <div class="table-view glass" id="table-container" style="display:none">
+    <table>
+      <thead>
+        <tr>
+          <th>الحالة</th><th>اسم الجهاز</th><th>IP / MAC</th><th>السرعة اللحظية</th>
+          <th>الاستهلاك (تحميل / رفع)</th>
+          <th>الكوتة والاستهلاك (GB)</th>
+          <th style="color:var(--cyan)">⬇️ حد التحميل</th>
+          <th style="color:var(--accent)">⬆️ حد الرفع</th>
+          <th style="color:#60a5fa">معرف التيليجرام</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="devices-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- ELEGANT DIVIDER BETWEEN CONNECTED & OFFLINE -->
+  <div style="margin:38px 0 26px 0;border-top:1px dashed rgba(16,185,129,0.35);position:relative;text-align:center">
+    <button type="button" onclick="toggleOfflineSection()" id="btn-toggle-offline" style="position:relative;top:-19px;background:#0d1117;border:1.5px solid #10b981;border-radius:24px;color:#fff;padding:8px 24px;font-size:0.86rem;font-weight:700;cursor:pointer;box-shadow:0 0 16px rgba(16,185,129,0.25);transition:all .25s ease;display:inline-flex;align-items:center;gap:8px">
+      <span id="offline-toggle-icon" style="color:#10b981;font-size:0.82rem">▼</span>
+      <span id="offline-toggle-text">إخفاء الأجهزة غير المتصلة (0 أجهزة)</span>
+    </button>
+  </div>
+
+  <!-- SECTION 2: OFFLINE / PREVIOUSLY CONNECTED DEVICES -->
+  <div id="offline-devices-section" style="transition:all .3s ease">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <h3 style="font-size:1rem;color:var(--muted);display:flex;align-items:center;gap:8px">
+        <span>⚪</span> الأجهزة غير المتصلة حالياً (المسجلة مسبقاً)
+        <span class="badge" style="background:rgba(255,255,255,0.08);color:var(--muted)" id="offline-count-badge">0 أجهزة</span>
+      </h3>
+      <span style="font-size:0.75rem;color:var(--muted);align-self:center">💡 يمكنك ضبط الكوتة وسقف السرعة أو الحظر مسبقاً قبل اتصال الجهاز</span>
+    </div>
+
+    <div class="cards-view" id="offline-cards-container"></div>
+    <div class="table-view glass" id="offline-table-container" style="display:none">
+      <table>
+        <thead>
+          <tr>
+            <th>الحالة</th><th>اسم الجهاز</th><th>آخر IP و MAC</th>
+            <th>الاستهلاك (تحميل / رفع)</th>
+            <th>الكوتة المسبقة والإجمالي</th>
+            <th style="color:var(--cyan)">⬇️ حد التحميل</th>
+            <th style="color:var(--accent)">⬆️ حد الرفع</th>
+            <th style="color:#60a5fa">معرف التيليجرام</th>
+            <th>حظر مسبق</th><th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="offline-devices-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TAB 2: MAIN ISP QUOTA -->
+<section id="tab-period" class="tab-content">
+  <div class="card-section glass">
+    <h2>🌐 إعدادات باقة النت الأساسية (حسب الرزنامة)</h2>
+    <p class="note">أدخل سعة الباقة الإجمالية من شركة النت (بالـ GB) وتاريخ البداية والنهاية لحساب الرصيد المتبقي ومتابعة نصيب كل جهاز.</p>
+    <div class="form-group"><label>سعة باقة النت الأساسية (GB) - مثال 140 أو 200 أو 250:</label>
+      <input id="cfg_main_quota_gb" type="number" min="0" step="0.1" placeholder="مثال: 140">
+    </div>
+    <div class="form-row-2">
+      <div class="form-group"><label>تاريخ بداية الباقة (Start Date):</label><input id="cfg_start_date" type="date"></div>
+      <div class="form-group"><label>تاريخ نهاية / تجديد الباقة (End Date):</label><input id="cfg_end_date" type="date"></div>
+    </div>
+    <button type="button" class="primary-btn" onclick="saveMainQuotaConfig(this)">💾 حفظ إعدادات الباقة الأساسية</button>
+  </div>
+
+      <!-- METER SCALING & GB STANDARD CARD -->
+    <div class="card-section glass" style="border:1px solid rgba(16, 185, 129, 0.35);background:rgba(16, 185, 129, 0.03);margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0;color:#fff">📐 دقة ومعايرة العداد وحساب الجيجا (Meter Scaling & GB Standard)</h2>
+        <span class="badge badge-online" style="background:rgba(16,185,129,0.15);color:var(--green);border:1px solid var(--green)">المعايرة: <b id="badge-meter-scale">100%</b> | <b id="badge-gb-std">1024 MB</b></span>
+      </div>
+      <p class="note" style="margin-bottom:16px">حدد النسبة المئوية لاحتساب استهلاك بايتات التحميل والرفع في العداد، ومعيار حساب الجيجابايت ليتطابق بدقة مع عداد شركة الإنترنت أو أنظمة التشغيل.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:14px">
+        <!-- 1. METER SCALING PERCENTAGE -->
+        <div class="form-group">
+          <label style="font-weight:600;margin-bottom:6px;display:block">نسبة احتساب العداد (Meter Scaling):</label>
+          <select id="cfg_meter_scale" onchange="onMeterScaleChange(this.value)">
+            <option value="110">110% (زيادة 10% لاحتساب ترويسات الحزم Overhead والتحوط الإضافي)</option>
+            <option value="105">105% (زيادة 5% للتحوط المسبق مع شركات الاتصالات)</option>
+            <option value="100" selected>100% (حساب حقيقي دقيق 1:1 - ملف 100MB يُحسب 100MB بالضبط) [الافتراضي]</option>
+            <option value="95">95% (تخفيض 5% لتجاوز حزم الشبكة التكرارية Re-transmissions)</option>
+            <option value="90">90% (تخفيض 10% عن الحجم الفعلي)</option>
+            <option value="85">85% (تخفيض 15% لتوفير الباقة)</option>
+            <option value="80">80% (تخفيض 20% لتوفير الباقة)</option>
+            <option value="75">75% (تخفيض 25% - ربع الحجم معفي)</option>
+            <option value="70">70% (تخفيض 30%)</option>
+            <option value="50">50% (تخفيض 50% - احتساب نصف الاستهلاك الفعلي 1:2)</option>
+          </select>
+        </div>
+
+        <!-- 2. GIGABYTE STANDARD (1024 MB vs 1000 MB) -->
+        <div class="form-group">
+          <label style="font-weight:600;margin-bottom:6px;display:block">معيار احتساب الجيجابايت (GB Unit Calculation):</label>
+          <select id="cfg_gb_std" onchange="onGbStandardChange(this.value)">
+            <option value="1024" selected>1024 MB = 1 GiB (معيار أنظمة التشغيل والكمبيوتر Binary) [الافتراضي]</option>
+            <option value="1000">1000 MB = 1 GB (معيار باقات شركات الإنترنت ISP - 1000 ميجا للجيجا لمطابقة عداد الشركة)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="background:rgba(0,0,0,0.22);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:0.8rem;color:var(--muted);line-height:1.6">
+        ℹ️ <b>توضيح الفرق بين المعيارين:</b><br>
+        • <b>معيار 1024 MB (ثنائي):</b> 1 جيجا = 1,073,741,824 بايت، وهو المعيار البرمجي الدقيق المستخدم في أنظمة التشغيل (ويندوز، لينكس).<br>
+        • <b>معيار 1000 MB (عشري):</b> 1 جيجا = 1,000,000,000 بايت (1000 ميجا)، وهو المعيار التجاري المعتمد لدى شركات الاتصالات والراوترات لمطابقة استهلاك الباقة الرسمية.
+      </div>
+
+      <div style="display:flex;justify-content:flex-end">
+        <button id="scale_save_btn" type="button" class="primary-btn" onclick="saveMeterScaleConfig()" style="padding:10px 24px;font-size:0.9rem;background:linear-gradient(135deg,#059669,#10b981);border:none;box-shadow:0 0 12px rgba(16,185,129,0.35)">
+          💾 حفظ وتطبيق إعدادات المعايرة
+        </button>
+      </div>
+    </div>
+
+  <div class="card-section glass">
+    <h2>⏳ دورة العداد الاحتياطية بالأيام</h2>
+    <p id="period_info" class="note">جاري تحميل بيانات الفترة...</p>
+    <form onsubmit="submitPeriodDays(event)">
+      <div class="form-group"><label>مدة الدورة التنازلية بالأيام (من 1 إلى 365):</label>
+        <input id="period_days" type="number" min="1" max="365" value="30" required>
+      </div>
+      <button class="primary-btn" type="submit">تطبيق المدة بالأيام</button>
+    </form>
+    <hr style="border:none;border-top:1px solid var(--glass-border);margin:18px 0">
+    <button type="button" class="danger-btn" onclick="resetMainQuota()">🔄 تصفير جميع العدادات وإعادة دورة الباقة</button>
+    <p class="note" style="margin-top:8px">ملاحظة: تصفير العداد يبدأ دورة جديدة ويصفر استهلاك الأجهزة، ويرفع الحظر، ويعيد تفعيل إشعارات التيليجرام.</p>
+  </div>
+</section>
+
+<!-- TAB 3: TELEGRAM BOT & QUOTA ALERTS -->
+<section id="tab-telegram" class="tab-content">
+  <div class="card-section glass">
+    <h2>🤖 إعدادات بوت التيليجرام والتنبيهات التلقائية (Telegram Bot)</h2>
+    <p class="note">احصل على إشعارات فورية عبر التيليجرام عند وصول استهلاك الباقة لنسب معينة، مع إمكانية إرسال أوامر واستعلامات للبوت في أي وقت.</p>
+    
+    <form onsubmit="submitTelegramSettings(event)" style="display:flex;flex-direction:column;gap:14px">
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="cfg_tg_enable"> تفعيل إشعارات وتنبيهات التيليجرام (Enable Telegram Alerts)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>توكن البوت (Bot Token من BotFather):</label>
+        <div class="pw-wrap">
+          <input id="cfg_tg_token" type="password" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" style="direction:ltr;text-align:left">
+          <button type="button" class="pw-toggle" onclick="togglePwVis('cfg_tg_token',this)">👁️</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>معرّف المحادثة (Target Chat ID):</label>
+        <input id="cfg_tg_chat_id" type="text" placeholder="مثال: 987654321" style="direction:ltr;text-align:left">
+        <small style="font-size:0.75rem;color:var(--muted)">يمكنك معرفة الـ Chat ID الخاص بك بمراسلة بوت @userinfobot على التيليجرام.</small>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="cfg_tg_interactive"> تفعيل استقبال الأوامر والاستعلامات المباشرة (Interactive Bot getUpdates)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>نسب التنبيه المتعددة عند الاستهلاك (Alert Percentages):</label>
+        <input id="cfg_tg_thresholds" type="text" value="50,75,90,95" placeholder="50,75,90,95" style="direction:ltr;text-align:center">
+        <small style="font-size:0.75rem;color:var(--muted)">افصل بين النسب بفاصلة (مثال: 50,75,90,95). سيتم إرسال إشعار تلقائي عند تجاوز كل نسبة مرة واحدة فقط خلال دورة الباقة.</small>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button id="tg_save_btn" type="submit" class="primary-btn">💾 حفظ إعدادات التيليجرام</button>
+        <button type="button" class="action-btn btn-gaming" style="padding:11px 18px;font-size:0.92rem" onclick="testTelegramAlert(this)">🧪 إرسال رسالة تجريبية الآن</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card-section glass">
+    <h2>📋 دليل الأوامر التفاعلية للبوت</h2>
+    <div class="info-box">
+      <b style="color:var(--accent);display:block;margin-bottom:6px">يمكنك مراسلة البوت الخاص بك في التيليجرام بالأوامر التالية:</b>
+      • <code>/quota</code> أو <b>استهلاك</b> أو <b>باقي</b> : استعلام فوري عن باقة الراوتر واستهلاك باقات الأجهزة المحددة.<br>
+      • <code>/devices</code> أو <b>أجهزة</b> : عرض الأجهزة المتصلة حالياً مع تفاصيل السرعة والكوتا وتحديد السرعة.<br>
+      • <code>/speed</code> أو <b>سرعة</b> : قياس السرعة اللحظية للرفع والتحميل وحالة القناة 40MHz.<br>
+      • <code>/block [IP]</code> أو <b>حظر [IP]</b> : حظر جهاز متصل ومنعه من الإنترنت فوراً عبر lwIP NAPT.<br>
+      • <code>/unblock [IP]</code> أو <b>فك_حظر [IP]</b> : إلغاء حظر الجهاز وإعادة وصول الإنترنت له فوراً.<br>
+      • <code>/status</code> أو <b>حالة</b> : تقرير شامل عن حالة الراوتر والذاكرة المتاحة وتردد المعالج.<br>
+      • <code>/ota</code> أو <b>تحديث</b> : تفاصيل إصدار الفيرموير وقسم الإقلاع الثنائي OTA.<br>
+      • <code>/reboot</code> أو <b>ريستارت</b> : إعادة تشغيل الراوتر عن بُعد بعد حفظ العدادات بأمان.
+    </div>
+  </div>
+</section>
+
+<!-- TAB 4: SETTINGS & HARDWARE -->
+  <!-- ============================================================== -->
+  <!-- TAB: RESTART & AUTO-REBOOT (إعادة التشغيل والريستارت)           -->
+  <!-- ============================================================== -->
+  <section id="tab-reboot" class="tab-content">
+<div class="graph-card glass">
+  <div class="graph-head">
+    <div class="graph-title">📈 معدل تدفق البيانات المباشر (Live Bandwidth)</div>
+    <div class="graph-legend">
+      <span><span class="legend-dot" style="background:var(--green)"></span> تحميل (Download)</span>
+      <span><span class="legend-dot" style="background:var(--accent)"></span> رفع (Upload)</span>
+    </div>
+  </div>
+  <canvas id="speedChart"></canvas>
+</div>
+
+
+    
+<!-- DEDICATED PARENT NETWORK INFO BOX -->
+<div class="card-section glass" style="margin-bottom:20px;padding:16px 20px;border:1px solid rgba(16,185,129,0.35);background:rgba(16,185,129,0.04)">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+    <h3 style="font-size:1.05rem;color:#fff;display:flex;align-items:center;gap:8px;margin:0">
+      <span>📡</span> بيانات شبكة الإنترنت التي يستقبل منها الـ ESP النت (Parent Wi-Fi Network)
+      <span class="badge badge-online" id="parent-net-badge">متصل بالإنترنت 🟢</span>
+    </h3>
+    <span style="font-size:0.78rem;color:var(--muted)">تغذية الإنترنت عبر واجهة STA مع تسريع الـ NAPT العتادي</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;font-size:0.85rem">
+    <div style="background:rgba(0,0,0,0.25);padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border)">
+      <span style="color:var(--muted);display:block;font-size:0.75rem;margin-bottom:3px">اسم شبكة المصدر (SSID):</span>
+      <b style="color:#fff;font-size:1rem;display:flex;align-items:center;gap:6px"><span>📶</span> <span id="parent-ssid-txt">--</span></b>
+    </div>
+    <div style="background:rgba(0,0,0,0.25);padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border)">
+      <span style="color:var(--muted);display:block;font-size:0.75rem;margin-bottom:3px">قوة الإشارة وجودة الاتصال:</span>
+      <b style="color:var(--green);font-size:1rem" id="parent-rssi-txt">-- dBm</b>
+    </div>
+    <div style="background:rgba(0,0,0,0.25);padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border)">
+      <span style="color:var(--muted);display:block;font-size:0.75rem;margin-bottom:3px">عنوان الـ IP المخصص للـ ESP:</span>
+      <code style="color:var(--cyan);font-weight:700;font-size:0.95rem" id="parent-ip-txt">--</code>
+    </div>
+    <div style="background:rgba(0,0,0,0.25);padding:12px 14px;border-radius:12px;border:1px solid var(--glass-border)">
+      <span style="color:var(--muted);display:block;font-size:0.75rem;margin-bottom:3px">بوابة الراوتر وقناة البث (Gateway):</span>
+      <b style="color:var(--text);font-size:0.95rem" id="parent-gw-txt">--</b>
+    </div>
+  </div>
+</div>
+
+
+<!-- DAILY AUTO-REBOOT CARD -->
+    <div class="card-section glass" style="margin-bottom:20px;border:1px solid rgba(245, 158, 11, 0.4);background:rgba(245, 158, 11, 0.03)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0;color:#fff;display:flex;align-items:center;gap:8px">
+          <span>🔄</span> إعادة التشغيل اليومي التلقائي (Daily Scheduled Auto-Reboot)
+        </h2>
+        <span class="badge" style="background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid var(--amber)">
+          تفريغ الذاكرة المؤقتة دورياً
+        </span>
+      </div>
+      <p class="note" style="margin-bottom:14px">
+        إعادة تشغيل مجدولة يومياً في وقت محدد (افتراضياً 03:00 فجراً) لإنعاش الذاكرة ومسح كاش الاتصالات وحفظ كامل لعدادات الاستهلاك دون تصفيرها.
+      </p>
+
+      <form onsubmit="submitAutoReboot(event)" style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group">
+          <label class="checkbox-label" style="display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:700">
+            <input type="checkbox" id="cfg_rb_enable" style="width:18px;height:18px;accent-color:var(--amber);cursor:pointer">
+            <span>تفعيل إعادة التشغيل اليومي التلقائي (Daily Auto-Reboot)</span>
+          </label>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label style="font-weight:700;margin-bottom:6px;display:block">وقت إعادة التشغيل اليومي (HH:MM):</label>
+            <input id="cfg_rb_time" type="time" value="03:00" required style="font-size:1rem;font-weight:700">
+          </div>
+          <div class="form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <label style="margin:0;font-weight:700">فرق التوقيت (Timezone):</label>
+              <button type="button" class="btn btn-secondary" style="padding:2px 8px;font-size:0.75rem;background:rgba(6,182,212,0.15);color:var(--cyan);border:1px solid rgba(6,182,212,0.4)" onclick="autoDetectLocalTimezone()">⚡ مزامنة من جهازك</button>
+            </div>
+            <select id="cfg_rb_tz">
+              <option value="2">UTC+2 (مصر بالتوقيت الشتوي / القدس / طرابلس)</option>
+              <option value="3">UTC+3 (مصر صيفي / السعودية / العراق / الكويت / قطر)</option>
+              <option value="4">UTC+4 (الإمارات / عمان)</option>
+              <option value="1">UTC+1 (المغرب / الجزائر / تونس)</option>
+              <option value="0">UTC+0 (غرينتش)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="glass" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:12px 16px;background:rgba(0,0,0,0.35);border-radius:12px">
+          <div style="font-size:0.88rem">
+            🕒 ساعة الراوتر الآن: <b id="rb_router_clock" style="color:var(--cyan);font-family:monospace;font-size:1rem">جاري المزامنة...</b>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span id="rb_sync_badge" class="badge badge-offline">غير متزامن</span>
+            <button type="button" class="action-btn" style="padding:4px 10px;font-size:0.75rem" onclick="syncNtpNow()">🔄 مزامنة فورية</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(0,136,204,0.08);border:1px solid rgba(0,136,204,0.25);border-radius:10px">
+          <span style="font-size:1.1rem">🤖</span>
+          <span style="font-size:0.82rem;color:#90caf9">إرسال إشعار تيليجرام تلقائي للمدير فور اكتمال إعادة التشغيل اليومية موضحاً الذاكرة الحرة (Free RAM) وساعة الإقلاع.</span>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:6px">
+          <button id="rb_save_btn" type="submit" class="primary-btn" style="padding:10px 24px;font-size:0.9rem;font-weight:700">💾 حفظ مؤقت الريستارت اليومي</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- QUICK MANUAL REBOOT CARD -->
+    <div class="card-section glass" style="margin-bottom:20px;border:1px solid rgba(239, 68, 68, 0.35);background:rgba(239, 68, 68, 0.03)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0;color:#fff;display:flex;align-items:center;gap:8px">
+          <span>⚡</span> إعادة التشغيل اليدوية والعد التنازلي
+        </h2>
+        <span class="badge" style="background:rgba(239,68,68,0.15);color:var(--red);border:1px solid var(--red)">حفظ فوري في NVS</span>
+      </div>
+      <p class="note" style="margin-bottom:14px">
+        يمكنك إعادة تشغيل الراوتر فوراً في أي وقت، أو ضبط عد تنازلي بالدقائق قبل إعادة التشغيل.
+      </p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;align-items:center">
+        <!-- Immediate Reboot Button -->
+        <div class="glass" style="padding:16px;border-radius:12px;text-align:center">
+          <div style="font-weight:700;margin-bottom:8px;font-size:0.95rem">إعادة تشغيل فورية:</div>
+          <button type="button" class="danger-btn" style="width:100%;padding:12px;font-size:0.92rem;font-weight:700" onclick="triggerImmediateReboot()">
+            ⚡ إعادة تشغيل الراوتر الآن (Reboot Now)
+          </button>
+        </div>
+
+        <!-- Countdown Reboot Form -->
+        <div class="glass" style="padding:16px;border-radius:12px">
+          <div style="font-weight:700;margin-bottom:8px;font-size:0.95rem">العد التنازلي للريستارت:</div>
+          <form onsubmit="submitCountdownReboot(event)" style="display:flex;gap:8px;align-items:center">
+            <input type="number" id="cfg_cd_min" min="1" max="1440" value="5" style="width:80px;padding:8px;text-align:center;font-weight:700">
+            <span style="font-size:0.85rem;color:var(--muted)">دقيقة</span>
+            <button type="submit" class="primary-btn" style="flex:1;padding:8px;font-size:0.85rem">⏱️ بدء العد التنازلي</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="tab-settings" class="tab-content">
+  <div class="card-section glass" style="border:1px solid rgba(16, 185, 129, 0.4);background:rgba(16, 185, 129, 0.03);margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:0;color:#fff">⚡ أداء المعالج وتوفير الطاقة (ESP32 Performance)</h2>
+      <span class="badge badge-online" style="background:rgba(16,185,129,0.15);color:var(--green);border:1px solid var(--green)">تردد نشط: <b id="perf-badge-freq">240 MHz</b></span>
+    </div>
+    <p class="note" style="margin-bottom:16px">تحكم بتردد معالج الـ ESP32 ووضع توفير طاقة الواي فاي للوصول لأقصى سرعة ممكنة أو تقليل الحرارة واستهلاك الكهرباء.</p>
+
+    <!-- 3 PRESET BUTTONS -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:16px">
+      <button type="button" class="perf-preset-btn active" id="btn-preset-240" onclick="selectCpuPreset(240, false)">
+        🚀 أقصى أداء 240MHz + طاقة كاملة
+      </button>
+      <button type="button" class="perf-preset-btn" id="btn-preset-160" onclick="selectCpuPreset(160, false)">
+        ⚖️ متوازن 160MHz
+      </button>
+      <button type="button" class="perf-preset-btn" id="btn-preset-80" onclick="selectCpuPreset(80, true)">
+        🍃 توفير فائق 80MHz + توفير مفعل
+      </button>
+    </div>
+
+    <form onsubmit="submitPerformance(event)">
+      <!-- MANUAL CPU FREQUENCY SELECT -->
+      <div class="form-group" style="margin-bottom:14px">
+        <label style="font-weight:600;margin-bottom:6px;display:block">تردد المعالج اليدوي:</label>
+        <select id="cfg_cpu_freq" onchange="onManualCpuFreqChange(this.value)">
+          <option value="240" selected>240 MHz (السرعة القصوى - أقصى تدفق بيانات NAPT وأدنى Ping)</option>
+          <option value="160">160 MHz (السرعة القياسية)</option>
+          <option value="80">80 MHz (تردد اقتصادي)</option>
+        </select>
+      </div>
+
+      <!-- WI-FI POWER SAVE CHECKBOX -->
+      <div style="margin-bottom:18px;display:flex;align-items:center">
+        <label class="checkbox-label" style="display:inline-flex;align-items:center;gap:10px;cursor:pointer;width:auto">
+          <input type="checkbox" id="cfg_wifi_ps" onchange="onManualPowerSaveChange(this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#10b981;margin:0;flex-shrink:0">
+          <span style="font-weight:600">تفعيل وضع توفير طاقة الواي فاي (Wi-Fi Power Save)</span>
+        </label>
+      </div>
+
+      <!-- SAVE BUTTON -->
+      <div style="display:flex;justify-content:flex-end">
+        <button id="perf_save_btn" type="submit" class="primary-btn" style="padding:10px 24px;font-size:0.9rem;background:linear-gradient(135deg,#059669,#10b981);border:none;box-shadow:0 0 12px rgba(16,185,129,0.35)">
+          💾 حفظ إعدادات الأداء
+        </button>
+      </div>
+    </form>
+  </div>
+  <div class="card-section glass" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:0;color:#fff;display:flex;align-items:center;gap:8px">
+        <span>📶</span> الاتصال بالراوتر الأساسي والواي فاي
+      </h2>
+      <span class="badge" id="wifi-status-badge" style="background:rgba(16,185,129,0.15);color:var(--green);border:1px solid var(--green)">
+        متصل بالإنترنت 🟢
+      </span>
+    </div>
+    <p class="note" style="margin-bottom:16px">قم بمسح شبكات الواي فاي القريبة والاتصال برواتر المودم الأساسي لتوزيع وتوجيه الإنترنت عبر تقنية NAPT.</p>
+
+    <form method="post" action="/save" onsubmit="if(!isAdmin){openLoginModal();return false;}">
+      <!-- NEARBY NETWORKS SCAN -->
+      <div class="form-group" style="margin-bottom:14px">
+        <label style="font-weight:700;margin-bottom:6px;display:block">شبكات الواي فاي القريبة:</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button type="button" id="scan_button" class="primary-btn" style="padding:10px 20px;font-size:0.88rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;background:var(--accent-grad);border:none;box-shadow:0 3px 12px var(--accent-shadow);flex-shrink:0" onclick="triggerScan()">
+            🔍 فحص
+          </button>
+          <select id="scan_results" style="flex:1;padding:10px 14px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);color:var(--text);border-radius:10px;font-size:0.9rem">
+            <option value="">اضغط فحص لاكتشاف شبكات الواي فاي المحيطة</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- UPSTREAM SSID -->
+      <div class="form-group" style="margin-bottom:14px">
+        <label style="font-weight:700;margin-bottom:6px;display:block">اسم شبكة الراوتر الأساسي (SSID):</label>
+        <input name="router_ssid" id="cfg_router_ssid" maxlength="32" required placeholder="مثال: Home_Fiber_5G" style="font-size:0.92rem;font-family:inherit">
+      </div>
+
+      <!-- UPSTREAM PASSWORD -->
+      <div class="form-group" style="margin-bottom:14px">
+        <label style="font-weight:700;margin-bottom:6px;display:block">كلمة مرور الراوتر الأساسي:</label>
+        <div class="pw-wrap" style="position:relative;display:flex;align-items:center">
+          <input name="router_password" id="cfg_router_pass" type="password" maxlength="63" placeholder="أدخل كلمة المرور (أو اتركها فارغة إذا لم تتغير)" style="flex:1;padding-left:42px">
+          <button type="button" class="pw-toggle" onclick="togglePwVis('cfg_router_pass',this)" style="position:absolute;left:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">👁️</button>
+        </div>
+        <label class="checkbox-label" style="margin-top:8px;display:inline-flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--muted);cursor:pointer">
+          <input type="checkbox" name="clear_router_password" value="1" style="accent-color:var(--accent)"> شبكة مفتوحة بدون كلمة مرور (Open Network)
+        </label>
+      </div>
+
+      <!-- STATIC IP SECTION -->
+      <div class="glass" style="margin:18px 0;padding:16px 18px;border-radius:14px;border:1px solid rgba(6, 182, 212, 0.35);background:rgba(6, 182, 212, 0.04)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <label class="checkbox-label" style="display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:0.95rem;color:#fff;cursor:pointer;margin:0">
+            <input type="checkbox" name="static_enabled" value="1" id="static_toggle" onchange="document.getElementById('static_fields').style.display=this.checked?'block':'none'" style="width:18px;height:18px;accent-color:var(--cyan);cursor:pointer">
+            <span>🌐 تفعيل ميزة تثبيت عنوان الـ IP للراوتر (Static IP) بدل DHCP</span>
+          </label>
+          <span class="badge" style="background:rgba(6,182,212,0.15);color:var(--cyan);border:1px solid var(--cyan);font-size:0.75rem">اتصال فائق الاستقرار</span>
+        </div>
+        <p class="note" style="margin-bottom:12px;font-size:0.8rem;line-height:1.6">
+          تثبيت الـ IP يمنح راوتر الـ ESP32 عنواناً ثابتاً ومحدداً لا يتغير داخل شبكة المودم الرئيسي، مما يمنع انقطاع الاتصال ويسهل فتح المنافذ (Port Forwarding) وإدارة الشبكة بدقة.
+        </p>
+
+        <div id="static_fields" style="display:none;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08)">
+          <div class="form-row-2">
+            <div class="form-group">
+              <label style="font-weight:600;font-size:0.85rem">📌 عنوان الـ IP الثابت للراوتر (Static IP):</label>
+              <input name="sta_ip" id="cfg_sta_ip" placeholder="192.168.1.50" style="direction:ltr;text-align:left;font-family:monospace">
+            </div>
+            <div class="form-group">
+              <label style="font-weight:600;font-size:0.85rem">🎭 قناع الشبكة الفرعية (Subnet Mask):</label>
+              <input name="sta_mask" id="cfg_sta_mask" placeholder="255.255.255.0" value="255.255.255.0" style="direction:ltr;text-align:left;font-family:monospace">
+            </div>
+          </div>
+          <div class="form-row-2" style="margin-top:10px">
+            <div class="form-group">
+              <label style="font-weight:600;font-size:0.85rem">🚪 عنوان البوابة الافتراضية (Default Gateway):</label>
+              <input name="sta_gateway" id="cfg_sta_gw" placeholder="192.168.1.1" style="direction:ltr;text-align:left;font-family:monospace">
+            </div>
+            <div class="form-group">
+              <label style="font-weight:600;font-size:0.85rem">🌍 خادم DNS الأساسي (DNS Server):</label>
+              <input name="sta_dns" id="cfg_sta_dns" placeholder="192.168.1.1 أو 8.8.8.8" style="direction:ltr;text-align:left;font-family:monospace">
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px">
+            <button type="button" class="btn btn-secondary" style="font-size:0.78rem;padding:5px 12px;background:rgba(6,182,212,0.12);color:var(--cyan);border:1px solid rgba(6,182,212,0.3)" onclick="document.getElementById('cfg_sta_ip').value='192.168.1.50';document.getElementById('cfg_sta_mask').value='255.255.255.0';document.getElementById('cfg_sta_gw').value='192.168.1.1';document.getElementById('cfg_sta_dns').value='8.8.8.8';">
+              ⚡ اقتراح إعدادات تلقائية (192.168.1.50)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESP32 BROADCAST AP -->
+      <hr style="border:none;border-top:1px solid var(--glass-border);margin:18px 0">
+      <h3 style="font-size:1rem;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+        <span>📡</span> بث شبكة الواي فاي للـ ESP32 (SoftAP)
+      </h3>
+      <div class="form-row-2">
+        <div class="form-group">
+          <label style="font-weight:600">اسم شبكة الـ ESP32 (SSID):</label>
+          <input name="ap_ssid" id="cfg_ap_ssid" maxlength="32" required placeholder="ESP32-Router">
+        </div>
+        <div class="form-group">
+          <label style="font-weight:600">كلمة مرور شبكة الـ ESP32:</label>
+          <div class="pw-wrap" style="position:relative;display:flex;align-items:center">
+            <input name="ap_password" id="cfg_ap_pass" type="password" maxlength="63" placeholder="على الأقل 8 أحرف" style="flex:1;padding-left:42px">
+            <button type="button" class="pw-toggle" onclick="togglePwVis('cfg_ap_pass',this)" style="position:absolute;left:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem">👁️</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:10px">
+        <label style="font-weight:600">معيار وسرعة بث الواي فاي (Wi-Fi Protocol / Bandwidth):</label>
+        <select name="wifi_protocol" id="cfg_wifi_protocol">
+          <option value="1">802.11b/g/n Mixed (HT40) — حتى 150 Mbps (السرعة القصوى والأداء الأسرع)</option>
+          <option value="0">802.11b/g/n Mixed (HT20) — حتى 72.2 Mbps (استقرار عالٍ وتوافق شامل)</option>
+          <option value="2">802.11n Only (HT40) — حتى 150 Mbps (للأجهزة الحديثة فقط)</option>
+          <option value="3">802.11n Only (HT20) — حتى 72.2 Mbps</option>
+        </select>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:16px">
+        <button class="primary-btn" type="submit" style="padding:10px 24px;font-size:0.92rem;font-weight:700">
+          💾 حفظ إعدادات الواي فاي والاتصال وإعادة التشغيل
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- TELEGRAM BOT & ALERTS CARD IN TAB-SETTINGS -->
+  <div class="card-section glass" style="border:1px solid rgba(96, 165, 250, 0.4);background:rgba(96, 165, 250, 0.04);margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:0;color:#fff">🤖 إعدادات بوت وتنبيهات التيليجرام (Telegram Bot & Alerts)</h2>
+      <span class="badge" style="background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid #60a5fa">تنبيهات تلقائية + أوامر تفاعلية</span>
+    </div>
+    <p class="note" style="margin-bottom:14px">إرسال تنبيهات استهلاك تلقائية عند تجاوز النسب المقررة للباقة وللأجهزة، واستقبال الأوامر والاستعلامات التفاعلية على النواة 1.</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="cfg_tg_enable_st"> تفعيل إشعارات وتنبيهات التيليجرام التلقائية (Push Alerts)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>توكن البوت (Telegram Bot Token من BotFather):</label>
+        <div class="pw-wrap">
+          <input id="cfg_tg_token_st" type="password" placeholder="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ" style="direction:ltr;text-align:left">
+          <button type="button" class="pw-toggle" onclick="togglePwVis('cfg_tg_token_st',this)">👁️</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>معرّف مدير الشبكة (Admin Chat ID):</label>
+        <input id="cfg_tg_chat_id_st" type="text" placeholder="مثال: 987654321" style="direction:ltr;text-align:left">
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" id="cfg_tg_interactive_st"> تفعيل استقبال الأوامر والاستعلامات المباشرة (Interactive Bot getUpdates)
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>نسب التنبيه المتعددة عند الاستهلاك (Alert Thresholds %):</label>
+        <input id="cfg_tg_thresholds_st" type="text" value="50,75,90,95" placeholder="50,75,90,95" style="direction:ltr;text-align:center">
+        <small style="font-size:0.75rem;color:var(--muted)">افصل بين النسب بفاصلة (مثال: 50,75,90,95) للتنبيه عند كل حد لمرة واحدة خلال الدورة.</small>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="button" class="primary-btn" onclick="submitTelegramSettings(null, true)">💾 حفظ إعدادات التيليجرام</button>
+        <button type="button" class="action-btn btn-gaming" style="padding:11px 18px;font-size:0.92rem" onclick="testTelegramAlert(this)">🧪 إرسال رسالة تجريبية الآن</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-section glass" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;border:1px solid rgba(245, 158, 11, 0.3)">
+    <div>
+      <h2 style="margin:0 0 6px 0;display:flex;align-items:center;gap:8px"><span>🔄</span> مؤقت إعادة التشغيل اليومي (Daily Auto-Reboot)</h2>
+      <p class="note" style="margin:0">تم تخصيص تبويب مستقل وكامل في القائمة العلوية لإدارة مؤقت الريستارت، العد التنازلي، والتشغيل الفوري.</p>
+    </div>
+    <button type="button" class="action-btn btn-gaming" onclick="document.querySelector('.tab-btn[onclick*=\'tab-reboot\']').click()" style="padding:10px 20px;font-weight:700">الانتقال لتبويب الريستارت 👈</button>
+  </div>
+
+  <div class="card-section glass">
+    <h2>🔐 أمان تسجيل دخول المشرف</h2>
+    <p class="note">تغيير اسم المستخدم وكلمة المرور للتحكم بإعدادات الراوتر والصلاحيات الإدارية.</p>
+    <form onsubmit="changeAdminPassword(event)" style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group"><label>كلمة المرور الحالية:</label>
+        <div class="pw-wrap"><input id="pw_old" type="password" required autocomplete="current-password" style="direction:ltr;text-align:left">
+          <button type="button" class="pw-toggle" onclick="togglePwVis('pw_old',this)">👁️</button>
+        </div>
+      </div>
+      <div class="form-group"><label>اسم المستخدم الجديد:</label><input id="pw_new_user" type="text" required maxlength="32" value="admin" style="direction:ltr;text-align:left"></div>
+      <div class="form-group"><label>كلمة المرور الجديدة:</label>
+        <div class="pw-wrap"><input id="pw_new_pass" type="password" required minlength="4" maxlength="64" autocomplete="new-password" placeholder="أدخل كلمة مرور قوية" style="direction:ltr;text-align:left;flex:1;padding-left:42px">
+          <button type="button" class="pw-toggle" onclick="togglePwVis('pw_new_pass',this)">👁️</button>
+        </div>
+      </div>
+      <button id="pw_save_btn" type="submit" class="danger-btn" style="padding:10px 24px;font-size:0.92rem;font-weight:700;background:linear-gradient(135deg, #ef4444 0%, #f97316 100%);border:none;box-shadow:0 4px 14px rgba(239, 68, 68, 0.35);cursor:pointer;border-radius:10px;color:#fff">تحديث بيانات المشرف</button>
+    </form>
+    <p class="note" style="margin-top:12px">في حال نسيان كلمة المرور، اضغط باستمرار على زر BOOT في البوردة لمدة 10 ثوانٍ للاستعادة الافتراضية (admin/admin).</p>
+    <hr style="border:none;border-top:1px solid var(--glass-border);margin:16px 0">
+    <button type="button" class="danger-btn" onclick="rebootRouter()">🔄 إعادة تشغيل الراوتر الآن (Reboot)</button>
+  </div>
+
+  <div class="card-section glass">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+      <h2 style="margin:0">🚀 التحديث الهوائي والترقية السحابية (OTA Firmware Updates)</h2>
+      <span class="badge badge-gaming" id="ota-version-badge">v3.2.0-PRO</span>
+    </div>
+    <p class="note">ترقية نظام وتشغيل الراوتر هوائياً دون الحاجة لتوصيل كابل USB مع حماية كاملة عبر نظام الإقلاع المزدوج (Dual-Bank OTA) وميزة التراجع التلقائي الآمن (Anti-Rollback).</p>
+    
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin:14px 0 8px 0;background:rgba(255,255,255,0.03);padding:12px;border-radius:10px;border:1px solid var(--glass-border)">
+      <div>
+        <span style="font-weight:700;font-size:0.95rem">🔍 التحقق الآلي من التحديثات السحابية</span>
+        <div style="font-size:0.8rem;color:var(--muted)">فحص مستودع GitHub السحابي بحثاً عن إصدارات أو مميزات جديدة</div>
+      </div>
+      <button type="button" class="primary-btn" style="padding:7px 16px;font-size:0.85rem" onclick="checkCloudUpdates(this)">🔍 فحص التحديثات السحابية الآن</button>
+    </div>
+    <div id="cloud-update-result" style="display:none;margin-bottom:12px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border)"></div>
+
+    <div class="ota-grid">
+      <div class="ota-box">
+        <h3 style="font-size:0.95rem;color:#fff;margin-bottom:8px">📁 تثبيت ملف تحديث محلي (.bin Upload)</h3>
+        <form onsubmit="uploadOtaFirmware(event)">
+          <div class="form-group">
+            <label>اختر ملف الفيرموير المترجم (.bin):</label>
+            <input type="file" id="ota_file" accept=".bin" style="padding:6px;background:rgba(0,0,0,0.4)">
+          </div>
+          <button type="submit" class="primary-btn" style="width:100%">⚡ رفع وتثبيت الفيرموير (Direct Flash)</button>
+        </form>
+      </div>
+
+      <div class="ota-box">
+        <h3 style="font-size:0.95rem;color:#fff;margin-bottom:8px">🌐 الترقية السحابية عبر رابط إنترنت (Remote URL)</h3>
+        <form onsubmit="triggerUrlOta(event)">
+          <div class="form-group">
+            <label>رابط الفيرموير المباشر (HTTP/HTTPS):</label>
+            <input type="url" id="ota_remote_url" placeholder="http://192.168.1.50:8000/esp32_napt_router.bin" style="direction:ltr;text-align:left">
+          </div>
+          <button type="submit" class="primary-btn" style="width:100%">🌐 بدء الترقية السحابية المباشرة</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- OTA Progress & Status Box -->
+    <div id="ota-progress-box" style="display:none;background:rgba(0,0,0,0.3);border:1px solid var(--accent);border-radius:10px;padding:14px;margin-top:12px">
+      <div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px">
+        <span id="ota-status-msg" style="color:var(--text)">جاري معالجة التحديث...</span>
+        <span id="ota-progress-text" style="color:var(--accent)">0%</span>
+      </div>
+      <div class="progress-bg" style="height:10px"><div class="progress-fill" id="ota-progress-bar" style="width:0%"></div></div>
+    </div>
+
+    <div class="info-box" style="margin-top:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div><b>بنك الإقلاع الحالي:</b> <span id="ota-running-bank" style="color:var(--cyan)">--</span></div>
+      <div><b>بنك التحديث القادم:</b> <span id="ota-target-bank" style="color:var(--amber)">--</span></div>
+      <div><b>تاريخ بناء النظام:</b> <span id="ota-build-date" style="color:var(--green)">--</span></div>
+      <div><b>حماية الإقلاع:</b> <span style="color:var(--green)">Rollback Protected ✅</span></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- FLOATING LEFT METRICS DOCK (Appears on wide screens when scrolling down) -->
+<div id="floating-metrics-dock" class="floating-metrics-dock" aria-label="شريط الإحصائيات اللحظية">
+  <div class="fmd-header">
+    <span class="fmd-title">📊 الحالة اللحظية</span>
+    <span class="pulse online" style="width:7px;height:7px"></span>
+  </div>
+  
+  <div class="fmd-item" title="سرعة التحميل اللحظية">
+    <span class="fmd-icon">⬇️</span>
+    <div class="fmd-details">
+      <span class="fmd-label">التحميل</span>
+      <b class="fmd-val" id="dock-down-speed" style="color:var(--cyan)">18.84 Mbps</b>
+    </div>
+  </div>
+
+  <div class="fmd-item" title="سرعة الرفع اللحظية">
+    <span class="fmd-icon">⬆️</span>
+    <div class="fmd-details">
+      <span class="fmd-label">الرفع</span>
+      <b class="fmd-val" id="dock-up-speed" style="color:var(--accent)">4.36 Mbps</b>
+    </div>
+  </div>
+
+  <div class="fmd-item" title="الأجهزة المتصلة حالياً">
+    <span class="fmd-icon">👥</span>
+    <div class="fmd-details">
+      <span class="fmd-label">الأجهزة</span>
+      <b class="fmd-val" id="dock-clients" style="color:var(--green)">6 / 12</b>
+    </div>
+  </div>
+
+  <div class="fmd-item" title="استهلاك باقة الإنترنت">
+    <span class="fmd-icon">🎯</span>
+    <div class="fmd-details">
+      <span class="fmd-label">الباقة</span>
+      <b class="fmd-val" id="dock-quota" style="color:var(--amber)">105.4 GB</b>
+    </div>
+  </div>
+
+  <div class="fmd-item" title="الذاكرة المتاحة (RAM)">
+    <span class="fmd-icon">🧠</span>
+    <div class="fmd-details">
+      <span class="fmd-label">الرام</span>
+      <b class="fmd-val" id="dock-ram" style="color:#f472b6">186 KB</b>
+    </div>
+  </div>
+
+  <div class="fmd-item" title="مدة التشغيل">
+    <span class="fmd-icon">⏱️</span>
+    <div class="fmd-details">
+      <span class="fmd-label">التشغيل</span>
+      <b class="fmd-val" id="dock-uptime" style="color:#a78bfa">3ي 14س</b>
+    </div>
+  </div>
+
+  <div class="fmd-item" title="الإنترنت المصدر">
+    <span class="fmd-icon">📶</span>
+    <div class="fmd-details">
+      <span class="fmd-label">المصدر</span>
+      <b class="fmd-val" id="dock-wan" style="color:var(--green)">-58 dBm</b>
+    </div>
+  </div>
+</div>
+
+<!-- FLOATING RIGHT SIDEBAR TABS DOCK -->
+<div id="floating-tabs-dock" class="floating-tabs-dock" aria-label="شريط التبويبات السريع">
+  <button type="button" class="floating-tab-btn active" data-tab="tab-devices" onclick="switchTab('tab-devices', null, true)" title="إدارة الأجهزة والسرعات">
+    <span class="ft-icon">👥</span>
+    <span class="ft-text">إدارة الأجهزة والسرعات</span>
+  </button>
+  <button type="button" class="floating-tab-btn" data-tab="tab-quota" onclick="switchTab('tab-quota', null, true)" title="باقة الإنترنت والاستهلاك">
+    <span class="ft-icon">💖</span>
+    <span class="ft-text">باقة الإنترنت والاستهلاك</span>
+  </button>
+  <button type="button" class="floating-tab-btn" data-tab="tab-telegram" onclick="switchTab('tab-telegram', null, true)" title="بوت وتنبيهات التيليجرام">
+    <span class="ft-icon">🤖</span>
+    <span class="ft-text">بوت وتنبيهات التيليجرام</span>
+  </button>
+  <button type="button" class="floating-tab-btn" data-tab="tab-reboot" onclick="switchTab('tab-reboot', null, true)" title="المراقبة وإعادة التشغيل (الريستارت)">
+    <span class="ft-icon">📊</span>
+    <span class="ft-text">المراقبة والريستارت</span>
+  </button>
+  <button type="button" class="floating-tab-btn" data-tab="tab-settings" onclick="switchTab('tab-settings', null, true)" title="إعدادات الجهاز والواي فاي">
+    <span class="ft-icon">⚙️</span>
+    <span class="ft-text">إعدادات الواي فاي</span>
+  </button>
+  <button type="button" class="floating-tab-btn" data-tab="tab-ota" onclick="switchTab('tab-ota', null, true)" title="التحديث الهوائي OTA السحابي">
+    <span class="ft-icon">🚀</span>
+    <span class="ft-text">التحديث الهوائي OTA</span>
+  </button>
+  <div class="ft-divider"></div>
+  <button type="button" class="floating-tab-btn ft-top-btn" onclick="scrollToTop()" title="الصعود لأعلى الصفحة">
+    <span class="ft-icon">⬆️</span>
+    <span class="ft-text">الصعود لأعلى</span>
+  </button>
+</div>
+
+</main>
+
+<!-- LOGIN MODAL -->
+<div id="login-modal" class="modal-backdrop">
+  <div class="modal-card">
+    <button type="button" class="modal-close" onclick="closeLoginModal()">&times;</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="width:44px;height:44px;border-radius:12px;background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem">🔐</div>
+      <div>
+        <h2 style="font-size:1.2rem;color:#fff;margin:0;font-weight:800">تسجيل دخول المشرف</h2>
+        <span style="font-size:0.78rem;color:var(--muted)">مطلوب لتأكيد التعديلات والتحكم الكامل بالراوتر</span>
+      </div>
+    </div>
+    <div id="login-reason-banner" style="background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);color:#fcd34d;padding:10px 14px;border-radius:10px;font-size:0.82rem;margin-bottom:14px;line-height:1.5;display:none">
+      🔒 يتطلب هذا الإجراء صلاحيات المشرف لتطبيقه وحفظه.
+    </div>
+    <div id="login-lockout" class="lockout-banner"></div>
+    <div id="login-error" style="display:none;color:var(--red);font-size:0.86rem;margin-bottom:10px;font-weight:700"></div>
+    <form onsubmit="submitLogin(event)" style="display:flex;flex-direction:column;gap:12px">
+      <div class="form-group"><label>اسم المستخدم:</label><input id="login_user" type="text" required autocomplete="username" style="direction:ltr;text-align:left"></div>
+      <div class="form-group"><label>كلمة المرور:</label>
+        <div class="pw-wrap">
+          <input id="login_pass" type="password" required autocomplete="current-password" style="direction:ltr;text-align:left">
+          <button type="button" class="pw-toggle" onclick="togglePwVis('login_pass',this)">👁️</button>
+        </div>
+      </div>
+      <button id="login_submit_btn" type="submit" class="primary-btn">دخول المشرف</button>
+    </form>
+  </div>
+</div>
+
+<script>
+
+// -----------------------------------------------------------------------------
+// GLOBAL FULL-PAGE ZOOM / SCALE CONTROLLER
+// -----------------------------------------------------------------------------
+let currentZoom = 85;
+
+function applyPageZoom(pct, saveToStorage = true) {
+  pct = Math.max(70, Math.min(110, pct));
+  currentZoom = pct;
+  
+  // Apply zoom to document.body (scales entire page and all elements)
+  document.body.style.zoom = (pct / 100);
+
+  // Update display text
+  const disp = document.getElementById('zoom-display');
+  if (disp) {
+    disp.textContent = pct + '%';
+    disp.title = `نسبة العرض الحالية: ${pct}% (انقر للتبديل بين 85% و 100%)`;
+  }
+  
+  if (saveToStorage) {
+    try { localStorage.setItem('esp_page_zoom', pct); } catch(e){}
+  }
+  
+  if (typeof drawSpeedChart === 'function') {
+    setTimeout(drawSpeedChart, 60);
+  }
+}
+
+function adjustZoom(delta) {
+  applyPageZoom(currentZoom + delta, true);
+  if (typeof showToast === 'function') {
+    showToast(`🔍 تم ضبط حجم الصفحة بالكامل على: ${currentZoom}%`);
+  }
+}
+
+function resetZoom() {
+  const target = (currentZoom === 100) ? 85 : 100;
+  applyPageZoom(target, true);
+  if (typeof showToast === 'function') {
+    showToast(`🔍 تم إعادة ضبط حجم الصفحة إلى: ${target}%`);
+  }
+}
+
+// Automatically load and apply initial zoom on page load
+(function() {
+  let saved = null;
+  try { saved = localStorage.getItem('esp_page_zoom'); } catch(e){}
+  let initVal = saved ? parseInt(saved, 10) : 85;
+  if (isNaN(initVal) || initVal < 70 || initVal > 110) initVal = 85;
+  applyPageZoom(initVal, false);
+})();
+
+
+function getDeviceIcon(name) {
+  if (!name) return '📱';
+  let n = name.toLowerCase();
+  if (n.match(/(galaxy|iphone|pixel|xiaomi|redmi|huawei|oppo|vivo|realme|oneplus|honor|phone|mobile|هاتف|موبايل|جوال)/)) return '📱';
+  if (n.match(/(thinkpad|dell|xps|macbook|laptop|pc|desktop|notebook|hp|lenovo|asus|acer|كمبيوتر|لابتوب|حاسوب)/)) return '💻';
+  if (n.match(/(playstation|ps5|ps4|ps3|xbox|switch|nintendo|steam|gaming|gamer|ألعاب|بلايستيشن|كونسول)/)) return '🎮';
+  if (n.match(/(tv|smart tv|apple tv|firetv|chromecast|roku|oled|qled|bravia|شاشة|تلفاز|تلفزيون)/)) return '📺';
+  if (n.match(/(watch|apple watch|band|gear|ساعة)/)) return '⌚';
+  if (n.match(/(ipad|tablet|tab|لوحي|تابلت|آيباد)/)) return '📱';
+  if (n.match(/(printer|طابعة)/)) return '🖨️';
+  if (n.match(/(cam|camera|كاميرا)/)) return '📷';
+  return '🖥️';
+}
+
+let isAdmin = false;
+let currentTheme = localStorage.getItem('esp_theme') || 'sunset';
+let viewMode = localStorage.getItem('esp_view') || 'cards';
+let speedHistoryDown = new Array(30).fill(0);
+let speedHistoryUp = new Array(30).fill(0);
+
+function setTheme(theme) {
+  currentTheme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('esp_theme', theme);
+  document.getElementById('btn-theme-sunset').classList.toggle('active', theme === 'sunset');
+  document.getElementById('btn-theme-matrix').classList.toggle('active', theme === 'matrix');
+  drawSpeedChart();
+    if (typeof syncFloatingMetrics === 'function') syncFloatingMetrics();
+}
+setTheme(currentTheme);
+
+
+let gbStandard = 1024;
+let meterScalePct = 100;
+
+function formatSmartBytes(bytes) {
+  if (!bytes || bytes <= 0) return '0 MB';
+  let div = (gbStandard === 1000) ? 1000 : 1024;
+  let divMB = div * div;
+  let divGB = divMB * div;
+  if (bytes < divGB) {
+    let mb = Math.round(bytes / divMB);
+    return mb + ' MB';
+  }
+  return (bytes / divGB).toFixed(2) + ' GB';
+}
+
+let offlineSectionVisible = true;
+
+let userOverrodeView = false;
+
+function setViewMode(mode, isManual = true) {
+  if (isManual) {
+    userOverrodeView = true;
+    try { localStorage.setItem('esp_view', mode); } catch(e){}
+  }
+  viewMode = mode;
+  let btnCards = document.getElementById('btn-view-cards');
+  let btnTbl = document.getElementById('btn-view-table');
+  if (btnCards) btnCards.classList.toggle('active', mode === 'cards');
+  if (btnTbl) btnTbl.classList.toggle('active', mode === 'table');
+  let cc = document.getElementById('cards-container');
+  let tc = document.getElementById('table-container');
+  let occ = document.getElementById('offline-cards-container');
+  let otc = document.getElementById('offline-table-container');
+  if (cc) cc.style.display = (mode === 'cards') ? 'grid' : 'none';
+  if (tc) tc.style.display = (mode === 'table') ? 'block' : 'none';
+  if (occ) occ.style.display = (mode === 'cards') ? 'grid' : 'none';
+  if (otc) otc.style.display = (mode === 'table') ? 'block' : 'none';
+}
+
+function handleResponsiveView() {
+  let isMobile = window.innerWidth <= 768;
+  if (isMobile) {
+    setViewMode('cards', false);
+  } else {
+    let saved = null;
+    try { saved = localStorage.getItem('esp_view'); } catch(e){}
+    setViewMode(saved || 'table', false);
+  }
+}
+
+window.addEventListener('resize', handleResponsiveView);
+window.addEventListener('load', handleResponsiveView);
+handleResponsiveView();
+
+function toggleOfflineSection() {
+  offlineSectionVisible = !offlineSectionVisible;
+  let sec = document.getElementById('offline-devices-section');
+  let icon = document.getElementById('offline-toggle-icon');
+  let txt = document.getElementById('offline-toggle-text');
+  let badge = document.getElementById('offline-count-badge');
+  let countStr = badge ? badge.textContent : '0 أجهزة';
+  if (offlineSectionVisible) {
+    if (sec) sec.style.display = 'block';
+    if (icon) icon.textContent = '▼';
+    if (txt) txt.textContent = `إخفاء الأجهزة غير المتصلة (${countStr})`;
+  } else {
+    if (sec) sec.style.display = 'none';
+    if (icon) icon.textContent = '▲';
+    if (txt) txt.textContent = `عرض الأجهزة غير المتصلة (${countStr})`;
+  }
+}
+
+
+
+function syncFloatingMetrics() {
+  const dVal = document.getElementById('cur-down-mbps');
+  const dockD = document.getElementById('dock-down-speed');
+  if (dVal && dockD) dockD.textContent = dVal.textContent;
+
+  const uVal = document.getElementById('cur-up-mbps');
+  const dockU = document.getElementById('dock-up-speed');
+  if (uVal && dockU) dockU.textContent = uVal.textContent;
+
+  const cVal = document.getElementById('active-clients-str') || document.querySelector('.metric-card .metric-value[style*="green"]');
+  const dockC = document.getElementById('dock-clients');
+  if (cVal && dockC) dockC.textContent = cVal.textContent.replace(' متصل', '').trim();
+
+  const qVal = document.getElementById('main-quota-metric');
+  const dockQ = document.getElementById('dock-quota');
+  if (qVal && dockQ) dockQ.textContent = qVal.textContent;
+
+  const rVal = document.getElementById('free-heap-metric');
+  const dockR = document.getElementById('dock-ram');
+  if (rVal && dockR) dockR.textContent = rVal.textContent;
+
+  const upVal = document.getElementById('uptime-metric');
+  const dockUp = document.getElementById('dock-uptime');
+  if (upVal && dockUp) dockUp.textContent = upVal.textContent;
+
+  const wVal = document.getElementById('wan-details-metric');
+  const dockW = document.getElementById('dock-wan');
+  if (wVal && dockW) {
+    let parts = wVal.textContent.split('|');
+    dockW.textContent = parts[0] ? parts[0].trim() : '-58 dBm';
+  }
+}
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function handleFloatingTabsScroll() {
+  const header = document.querySelector('.header');
+  if (header) {
+    if (window.scrollY > 20) header.classList.add('scrolled');
+    else header.classList.remove('scrolled');
+  }
+  const tabsDock = document.getElementById('floating-tabs-dock');
+  const metricsDock = document.getElementById('floating-metrics-dock');
+  const navTabs = document.querySelector('.tabs');
+  const triggerPoint = navTabs ? (navTabs.offsetTop + navTabs.offsetHeight - 20) : 220;
+  const shouldShow = window.scrollY > triggerPoint;
+
+  if (tabsDock) {
+    if (shouldShow) tabsDock.classList.add('visible');
+    else tabsDock.classList.remove('visible');
+  }
+
+  if (metricsDock) {
+    const isWide = window.innerWidth >= 1150;
+    if (shouldShow && isWide) {
+      if (typeof syncFloatingMetrics === 'function') syncFloatingMetrics();
+      metricsDock.classList.add('visible');
+    } else {
+      metricsDock.classList.remove('visible');
+    }
+  }
+}
+
+window.addEventListener('scroll', handleFloatingTabsScroll, { passive: true });
+
+function switchTab(tabId, btn, shouldScrollTop = false) {
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    let onclickAttr = b.getAttribute('onclick') || '';
+    if (onclickAttr.includes(`'${tabId}'`)) {
+      b.classList.add('active');
+    } else {
+      b.classList.remove('active');
+    }
+  });
+
+  document.querySelectorAll('.floating-tab-btn').forEach(fb => {
+    if (fb.getAttribute('data-tab') === tabId) {
+      fb.classList.add('active');
+    } else {
+      fb.classList.remove('active');
+    }
+  });
+
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  let target = document.getElementById(tabId);
+  if (target) target.classList.add('active');
+  if (tabId === 'tab-reboot') setTimeout(drawSpeedChart, 60);
+
+  if (shouldScrollTop) {
+    scrollToTop();
+  }
+}
+
+function togglePwVis(id, btn) {
+  let el = document.getElementById(id);
+  if (!el) return;
+  if (el.type === 'password') { el.type = 'text'; btn.textContent = '🙈'; }
+  else { el.type = 'password'; btn.textContent = '👁️'; }
+}
+
+function openLoginModal(msg) {
+  let m = document.getElementById('login-modal');
+  let r = document.getElementById('login-reason-banner');
+  let errBox = document.getElementById('login-error');
+  if (errBox) errBox.style.display = 'none';
+  if (r) {
+    r.textContent = '🔒 ' + (msg || 'هذا الإجراء يتطلب صلاحيات المشرف لتأكيد التعديل وحفظه.');
+    r.style.display = 'block';
+  }
+  if (m) {
+    m.style.display = 'flex';
+    let u = document.getElementById('login_user');
+    if (u) u.focus();
+  }
+}
+function closeLoginModal() {
+  let m = document.getElementById('login-modal');
+  if (m) m.style.display = 'none';
+}
+function handleAuthClick() {
+  if (isAdmin) {
+    if (confirm('هل تريد بالتأكيد تسجيل الخروج من صلاحيات المشرف والعودة لوضع المراقبة فقط؟')) logoutAdmin();
+  } else {
+    openLoginModal('سجل الدخول كمشرف لتفعيل التحكم والتعديل الكامل');
+  }
+}
+
+async function submitLogin(e) {
+  e.preventDefault();
+  let u = document.getElementById('login_user').value.trim();
+  let p = document.getElementById('login_pass').value;
+  let btn = document.getElementById('login_submit_btn');
+  let errBox = document.getElementById('login-error');
+  let lockBox = document.getElementById('login-lockout');
+  errBox.style.display = 'none'; lockBox.style.display = 'none';
+  btn.disabled = true;
+
+  try {
+    let res = await fetch('/api/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({username: u, password: p})
+    });
+    let data = await res.json();
+    if (res.ok && data.ok) {
+      closeLoginModal();
+      refreshData();
+    } else if (res.status === 429) {
+      lockBox.style.display = 'block';
+      lockBox.textContent = '⚠️ تم حظر المحاولات مؤقتاً لتكرار الخطأ! انتظر ' + (data.remaining || 60) + ' ثانية.';
+    } else {
+      errBox.style.display = 'block';
+      errBox.textContent = 'بيانات الدخول غير صحيحة! متبقي ' + (data.attempts_left !== undefined ? data.attempts_left : '') + ' محاولات.';
+    }
+  } catch (err) {
+    errBox.style.display = 'block';
+    errBox.textContent = 'تعذر الاتصال بالراوتر';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function logoutAdmin() {
+  try { await fetch('/api/logout', {method: 'POST'}); } catch (e) {}
+  location.reload();
+}
+
+function drawSpeedChart() {
+  let canvas = document.getElementById('speedChart');
+  if (!canvas) return;
+  let ctx = canvas.getContext('2d');
+  let pw = canvas.parentElement ? canvas.parentElement.clientWidth : 0;
+  if (pw <= 0) return;
+  let w = canvas.width = pw;
+  let h = canvas.height = 130;
+  ctx.clearRect(0, 0, w, h);
+
+  let maxVal = Math.max(...speedHistoryDown, ...speedHistoryUp, 1000000); // at least 1 Mbps
+  let step = w / (speedHistoryDown.length - 1);
+
+  // Draw Download line
+  ctx.beginPath();
+  let colorDown = (currentTheme === 'sunset') ? '#10b981' : '#00ff9d';
+  ctx.strokeStyle = colorDown;
+  ctx.lineWidth = 2.5;
+  for (let i = 0; i < speedHistoryDown.length; i++) {
+    let x = i * step;
+    let y = h - (speedHistoryDown[i] / maxVal) * (h - 20) - 10;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Draw Upload line
+  ctx.beginPath();
+  let colorUp = (currentTheme === 'sunset') ? '#f43f5e' : '#38bdf8';
+  ctx.strokeStyle = colorUp;
+  ctx.lineWidth = 2.5;
+  for (let i = 0; i < speedHistoryUp.length; i++) {
+    let x = i * step;
+    let y = h - (speedHistoryUp[i] / maxVal) * (h - 20) - 10;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  let gb = bytes / 1000000000;
+  if (gb >= 1) return gb.toFixed(2) + ' GB';
+  let mb = bytes / 1000000;
+  if (mb >= 1) return mb.toFixed(1) + ' MB';
+  return (bytes / 1000).toFixed(0) + ' KB';
+}
+
+async function refreshData() {
+  try {
+    let res = await fetch('/api/devices');
+    if (!res.ok) return;
+    let data = await res.json();
+
+    isAdmin = !!data.is_admin;
+    let authBtn = document.getElementById('auth-btn');
+    if (authBtn) {
+      if (isAdmin) {
+        authBtn.className = 'auth-btn admin-active';
+        authBtn.innerHTML = '<span>👑</span> <span>المشرف (تسجيل خروج)</span>';
+        authBtn.title = 'أنت مسجل كمشرف كامل الصلاحيات. انقر لتسجيل الخروج والعودة لوضع المراقبة.';
+      } else {
+        authBtn.className = 'auth-btn';
+        authBtn.innerHTML = '<span>👁️</span> <span>وضع المراقبة (دخول المشرف)</span>';
+        authBtn.title = 'أنت في وضع المراقبة (عرض فقط). انقر لتسجيل الدخول كمشرف لتعديل الإعدادات.';
+      }
+    }
+
+    // WAN Status
+    let wanPulse = document.getElementById('wan-pulse');
+    let wanText = document.getElementById('wan-text');
+    if (data.wan) {
+      wanPulse.className = 'pulse online';
+      wanText.textContent = data.sta_ssid ? data.sta_ssid + ' (' + data.sta_rssi + ' dBm)' : 'متصل بالإنترنت';
+    } else {
+      wanPulse.className = 'pulse offline';
+      wanText.textContent = 'غير متصل بالراوتر';
+    }
+
+    // Speeds
+    let downMbps = (data.cur_down_bps / 1000000).toFixed(2);
+    let upMbps = (data.cur_up_bps / 1000000).toFixed(2);
+    document.getElementById('cur-down-mbps').textContent = downMbps + ' Mbps';
+    document.getElementById('cur-down-raw').textContent = (data.cur_down_bps / 8000).toFixed(0) + ' KB/s';
+    document.getElementById('cur-up-mbps').textContent = upMbps + ' Mbps';
+    document.getElementById('cur-up-raw').textContent = (data.cur_up_bps / 8000).toFixed(0) + ' KB/s';
+
+    speedHistoryDown.shift(); speedHistoryDown.push(data.cur_down_bps);
+    speedHistoryUp.shift(); speedHistoryUp.push(data.cur_up_bps);
+    drawSpeedChart();
+
+    // Active Clients String
+    let actCnt = data.active_clients || 0;
+    document.getElementById('active-clients-str').textContent = actCnt + ' / 12 متصل';
+
+    // Main Quota Summary
+    let totalUsedGB = ((data.total_up + data.total_down) / 1000000000).toFixed(2);
+    let mainCapGB = data.main_quota_gb > 0 ? data.main_quota_gb.toFixed(2) : '--';
+    document.getElementById('quota-summary-val').textContent = totalUsedGB + ' / ' + mainCapGB + ' GB';
+    let pct = (data.main_quota_gb > 0) ? Math.min(100, (totalUsedGB / data.main_quota_gb) * 100) : 0;
+    let bar = document.getElementById('quota-summary-bar');
+    bar.style.width = pct + '%';
+    if (pct > 90) bar.style.background = 'var(--red)';
+    else if (pct > 75) bar.style.background = 'var(--amber)';
+    else bar.style.background = 'var(--accent-grad)';
+
+    // System Metrics
+    document.getElementById('free-heap-kb').textContent = Math.round(data.free_heap / 1024) + ' KB';
+    document.getElementById('min-heap-kb').textContent = 'أدنى ذاكرة: ' + Math.round(data.min_free_heap / 1024) + ' KB (فائق الأداء)';
+    let upDays = Math.floor(data.uptime_s / 86400);
+    let upHours = Math.floor((data.uptime_s % 86400) / 3600);
+    let upMins = Math.floor((data.uptime_s % 3600) / 60);
+    document.getElementById('uptime-str').textContent = (upDays > 0 ? upDays + 'ي ' : '') + upHours + 'س ' + upMins + 'د';
+    document.getElementById('cpu-clock-str').textContent = 'التردد: ' + data.cpu_freq_mhz + ' MHz (RISC-V Single Core)';
+      if (typeof updateDashboardCpuFreq === 'function') updateDashboardCpuFreq(data.cpu_freq_mhz);
+      let pSel = document.getElementById('cfg_cpu_freq');
+      if (pSel && !document.activeElement?.isSameNode(pSel)) pSel.value = String(data.cpu_freq_mhz);
+      let pChk = document.getElementById('cfg_wifi_ps');
+      if (pChk && !document.activeElement?.isSameNode(pChk)) pChk.checked = !!data.wifi_power_save;
+      if (typeof updatePresetUi === 'function') updatePresetUi(data.cpu_freq_mhz, !!data.wifi_power_save);
+
+    // Parent Wi-Fi WAN Status
+    if (document.getElementById('wan-ssid-val')) {
+      document.getElementById('wan-ssid-val').textContent = data.sta_ssid || 'غير متصل';
+    }
+    if (document.getElementById('wan-info-sub')) {
+      document.getElementById('wan-info-sub').textContent = data.sta_ssid ?
+        ('الإشارة: ' + data.sta_rssi + ' dBm 📶 | IP: ' + (data.sta_ip || '--')) : 'جاري الفحص...';
+    }
+    if (document.getElementById('parent-ssid-txt')) document.getElementById('parent-ssid-txt').textContent = data.sta_ssid || 'غير متصل';
+    if (document.getElementById('parent-rssi-txt')) document.getElementById('parent-rssi-txt').textContent = data.sta_rssi ? (data.sta_rssi + ' dBm 📶') : '--';
+    if (document.getElementById('parent-ip-txt')) document.getElementById('parent-ip-txt').textContent = data.sta_ip || '--';
+    if (document.getElementById('parent-gw-txt')) document.getElementById('parent-gw-txt').textContent = (data.sta_gw || '--') + (data.sta_channel ? (' (قناة ' + data.sta_channel + ' • 5GHz Wi-Fi 6)') : '');
+    if (document.getElementById('parent-net-badge')) {
+      document.getElementById('parent-net-badge').className = data.wan ? 'badge badge-online' : 'badge badge-blocked';
+      document.getElementById('parent-net-badge').textContent = data.wan ? 'متصل بالإنترنت 🟢' : 'غير متصل 🔴';
+    }
+
+    // Populate Settings fields once if empty
+    // Populate Static IP & WiFi fields
+    if (data.sta_static_enabled !== undefined && !document.getElementById('static_toggle').dataset.loaded) {
+      document.getElementById('static_toggle').checked = !!data.sta_static_enabled;
+      document.getElementById('static_fields').style.display = data.sta_static_enabled ? 'block' : 'none';
+      if (data.sta_ip) document.getElementById('cfg_sta_ip').value = data.sta_ip;
+      if (data.sta_mask) document.getElementById('cfg_sta_mask').value = data.sta_mask;
+      if (data.sta_gw) document.getElementById('cfg_sta_gw').value = data.sta_gw;
+      if (data.sta_dns) document.getElementById('cfg_sta_dns').value = data.sta_dns;
+      document.getElementById('static_toggle').dataset.loaded = '1';
+    }
+
+    if (!document.getElementById('cfg_router_ssid').value && data.router_ssid) {
+      document.getElementById('cfg_router_ssid').value = data.router_ssid;
+    }
+    if (!document.getElementById('cfg_ap_ssid').value && data.ap_ssid) {
+      document.getElementById('cfg_ap_ssid').value = data.ap_ssid;
+    }
+    if (!document.getElementById('cfg_main_quota_gb').value && data.main_quota_gb > 0) {
+      document.getElementById('cfg_main_quota_gb').value = data.main_quota_gb;
+      document.getElementById('cfg_start_date').value = data.q_start;
+      document.getElementById('cfg_end_date').value = data.q_end;
+    }
+    if (data.meter_scale_pct) {
+      meterScalePct = data.meter_scale_pct;
+      let elSc = document.getElementById('cfg_meter_scale');
+      if (elSc && !document.activeElement?.isSameNode(elSc)) elSc.value = String(data.meter_scale_pct);
+    }
+    if (data.gb_standard) {
+      gbStandard = data.gb_standard;
+      let elStd = document.getElementById('cfg_gb_std');
+      if (elStd && !document.activeElement?.isSameNode(elStd)) elStd.value = String(data.gb_standard);
+    }
+    if (typeof updateMeterScaleBadges === 'function') {
+      updateMeterScaleBadges(meterScalePct, gbStandard);
+    }
+    if (document.getElementById('cfg_wifi_protocol') && data.wifi_proto !== undefined && !document.getElementById('cfg_wifi_protocol').dataset.loaded) {
+      document.getElementById('cfg_wifi_protocol').value = data.wifi_proto;
+      document.getElementById('cfg_wifi_protocol').dataset.loaded = '1';
+    }
+
+    // Sync Daily Auto-Reboot settings from status
+    if (data.rb_enable !== undefined && !document.getElementById('cfg_rb_enable').dataset.loaded) {
+      document.getElementById('cfg_rb_enable').checked = !!data.rb_enable;
+      if (data.rb_time) document.getElementById('cfg_rb_time').value = data.rb_time;
+      if (data.rb_tz !== undefined) document.getElementById('cfg_rb_tz').value = String(data.rb_tz);
+      document.getElementById('cfg_rb_enable').dataset.loaded = '1';
+    }
+    if (data.router_clock && document.getElementById('rb_router_clock')) {
+      document.getElementById('rb_router_clock').textContent = data.router_clock;
+    }
+    if (data.time_synced !== undefined && document.getElementById('rb_sync_badge')) {
+      let b = document.getElementById('rb_sync_badge');
+      b.className = data.time_synced ? 'badge badge-online' : 'badge badge-offline';
+      b.textContent = data.time_synced ? 'متزامن NTP 🟢' : 'غير متزامن 🔴';
+    }
+
+    // Sync Telegram settings in both tabs
+    if (data.tg_chat_id) {
+      let c1 = document.getElementById('cfg_tg_chat_id');
+      let c2 = document.getElementById('cfg_tg_chat_id_st');
+      if (c1 && !document.activeElement?.isSameNode(c1)) c1.value = data.tg_chat_id;
+      if (c2 && !document.activeElement?.isSameNode(c2)) c2.value = data.tg_chat_id;
+    }
+    if (data.tg_thresholds) {
+      let t1 = document.getElementById('cfg_tg_thresholds');
+      let t2 = document.getElementById('cfg_tg_thresholds_st');
+      if (t1 && !document.activeElement?.isSameNode(t1)) t1.value = data.tg_thresholds;
+      if (t2 && !document.activeElement?.isSameNode(t2)) t2.value = data.tg_thresholds;
+    }
+    if (data.tg_enable !== undefined) {
+      let e1 = document.getElementById('cfg_tg_enable');
+      let e2 = document.getElementById('cfg_tg_enable_st');
+      if (e1 && !document.activeElement?.isSameNode(e1)) e1.checked = !!data.tg_enable;
+      if (e2 && !document.activeElement?.isSameNode(e2)) e2.checked = !!data.tg_enable;
+    }
+    if (data.tg_interactive !== undefined) {
+      let i1 = document.getElementById('cfg_tg_interactive');
+      let i2 = document.getElementById('cfg_tg_interactive_st');
+      if (i1 && !document.activeElement?.isSameNode(i1)) i1.checked = !!data.tg_interactive;
+      if (i2 && !document.activeElement?.isSameNode(i2)) i2.checked = !!data.tg_interactive;
+    }
+
+    // Router Clock in Settings
+    let syncBadge = document.getElementById('rb_sync_badge');
+    let clockTxt = document.getElementById('rb_router_clock');
+    if (data.time_synced) {
+      syncBadge.className = 'badge badge-online';
+      syncBadge.textContent = 'متزامن NTP';
+      let nowLocal = new Date();
+      clockTxt.textContent = nowLocal.toLocaleTimeString('ar-EG');
+    } else {
+      syncBadge.className = 'badge badge-offline';
+      syncBadge.textContent = 'غير متزامن';
+      clockTxt.textContent = 'جاري المزامنة...';
+    }
+
+    // OTA Firmware Info
+    if (document.getElementById('ota-version-badge') && data.firmware_version) {
+      document.getElementById('ota-version-badge').textContent = data.firmware_version;
+    }
+    if (document.getElementById('ota-running-bank') && data.running_partition) {
+      document.getElementById('ota-running-bank').textContent = data.running_partition;
+      document.getElementById('ota-target-bank').textContent = (data.running_partition === 'ota_0') ? 'ota_1' : 'ota_0';
+    }
+    if (document.getElementById('ota-build-date')) {
+      document.getElementById('ota-build-date').textContent = new Date().toLocaleDateString('ar-EG');
+    }
+
+    renderDevices(data.devices || []);
+  } catch (err) {}
+}
+
+function renderDevices(devices) {
+  document.getElementById('dev-count-txt').textContent = devices.length;
+
+  let connectedDevs = devices.filter(d => d.connected);
+  let offlineDevs = devices.filter(d => !d.connected);
+
+  let connBadge = document.getElementById('connected-count-badge');
+  if (connBadge) connBadge.textContent = `${connectedDevs.length} متصل`;
+
+  let offBadge = document.getElementById('offline-count-badge');
+  if (offBadge) offBadge.textContent = `${offlineDevs.length} أجهزة`;
+
+  let toggleTxt = document.getElementById('offline-toggle-text');
+  if (toggleTxt) toggleTxt.textContent = `${offlineSectionVisible ? 'إخفاء' : 'عرض'} الأجهزة غير المتصلة (${offlineDevs.length} أجهزة)`;
+
+  // 1. CONNECTED DEVICES
+  let cardsHtml = '';
+  let tableHtml = '';
+
+  connectedDevs.forEach(dev => {
+    let name = dev.name || 'جهاز متصل';
+    let ip = dev.ip || '--';
+    let mac = dev.mac || '--';
+    let canonMac = dev.canon_mac || mac;
+    let isGaming = !!dev.gaming;
+    let isBlocked = !!dev.blocked;
+    let quotaGB = dev.quota_gb !== undefined ? dev.quota_gb : (dev.quota > 0 ? (dev.quota / 1000000000).toFixed(1) : 0);
+    let quotaPct = dev.quota_pct !== undefined ? dev.quota_pct : (dev.quota > 0 ? (((dev.up + dev.down) / dev.quota) * 100) : 0);
+    let quotaExceeded = dev.quota_exceeded !== undefined ? dev.quota_exceeded : (dev.quota > 0 && (dev.up + dev.down) >= dev.quota);
+    let upLimit = dev.upload_mbps !== undefined ? dev.upload_mbps : 0;
+    let downLimit = dev.download_mbps !== undefined ? dev.download_mbps : 0;
+    let tgChat = dev.telegram_chat_id || '';
+
+    let statusBadge = '';
+    if (quotaExceeded) {
+      statusBadge = '<span class="badge badge-blocked">⚠️ تجاوز الكوتة</span>';
+    } else if (isBlocked) {
+      statusBadge = '<span class="badge badge-blocked">⛔ محظور</span>';
+    } else {
+      statusBadge = '<span class="badge badge-online">🟢 متصل</span>';
+    }
+    if (isGaming) statusBadge += ' <span class="badge badge-gaming">🎮 VIP ألعاب</span>';
+
+    let quotaBarColor = quotaPct >= 100 ? 'var(--red)' : quotaPct >= 80 ? 'var(--amber)' : 'var(--green)';
+    let quotaBarWidth = Math.min(quotaPct, 100);
+    let quotaText = quotaGB > 0 ? `${formatBytes(dev.up + dev.down)} / ${quotaGB} GB (${quotaPct.toFixed(0)}%)` : `${formatBytes(dev.up + dev.down)} (غير محدود ♾️)`;
+
+    cardsHtml += `
+      <div class="dev-card glass ${isBlocked ? 'blocked' : ''} ${quotaExceeded ? 'quota-exceeded' : ''} ${isGaming ? 'gaming' : ''}">
+        <div class="dev-card-head">
+          <div>
+            <div class="dev-title">${name}</div>
+            <div class="dev-sub">${ip} | ${mac}</div>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+        <div class="stats-box">
+          <div><div class="lbl">تحميل</div><div class="val" style="color:var(--green)">${formatBytes(dev.down)}</div></div>
+          <div><div class="lbl">رفع</div><div class="val" style="color:var(--accent)">${formatBytes(dev.up)}</div></div>
+          <div><div class="lbl">الإجمالي</div><div class="val" style="color:var(--cyan)">${formatBytes(dev.up + dev.down)}</div></div>
+        </div>
+        <div class="quota-box" style="margin-top:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.78rem">
+            <span>📊 كوتة الجهاز: <b>${quotaText}</b></span>
+            <span>حصة الباقة: ${dev.share_pct ? dev.share_pct.toFixed(1) : 0}%</span>
+          </div>
+          ${quotaGB > 0 ? `
+          <div class="progress-bg" style="height:8px"><div class="progress-fill" style="width:${quotaBarWidth}%;background:${quotaBarColor}"></div></div>
+          ` : ''}
+          ${quotaExceeded ? '<div style="color:var(--red);font-weight:700;margin-top:4px;font-size:0.75rem">⛔ تم تجاوز الكوتة وحظر النت عن الجهاز تلقائياً</div>' : ''}
+          <div style="margin-top:6px;font-size:0.76rem;color:var(--text)">
+            السرعة اللحظية: ⬇️ ${(dev.cur_down_bps/1000000).toFixed(2)} Mbps | ⬆️ ${(dev.cur_up_bps/1000000).toFixed(2)} Mbps
+          </div>
+        </div>
+
+        <div class="dev-controls-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));">
+          <div>
+            <label>كوتة (GB):</label>
+            <input type="number" step="0.5" min="0" value="${quotaGB}" id="card_q_${canonMac}" title="0 = غير محدود">
+          </div>
+          <div>
+            <label>⬇️ حد التحميل:</label>
+            <input type="number" step="0.5" min="0" value="${downLimit}" id="card_dl_${canonMac}" placeholder="Mbps">
+          </div>
+          <div>
+            <label>⬆️ حد الرفع:</label>
+            <input type="number" step="0.5" min="0" value="${upLimit}" id="card_ul_${canonMac}" placeholder="Mbps">
+          </div>
+          <div>
+            <label>معرف التيليجرام:</label>
+            <input type="text" value="${tgChat}" id="card_tg_${canonMac}" placeholder="Chat ID" style="direction:ltr;text-align:center" title="معرف محادثة التيليجرام الخاص بمالك الجهاز">
+          </div>
+        </div>
+        <button type="button" class="primary-btn" style="width:100%;padding:6px 10px;font-size:0.8rem;margin-bottom:8px" onclick="saveDeviceCard('${canonMac}')">💾 حفظ الكوتة والسرعة</button>
+
+        <div class="btn-row">
+          <button type="button" class="action-btn btn-gaming" onclick="toggleGaming('${canonMac}', ${!isGaming})">🎮 ${isGaming ? 'إلغاء VIP' : 'ألعاب VIP'}</button>
+          <button type="button" class="action-btn ${isBlocked ? 'btn-unblock' : 'btn-block'}" onclick="toggleBlock('${canonMac}', ${!isBlocked})">${isBlocked ? 'فك الحظر' : 'حظر'}</button>
+          <button type="button" class="action-btn btn-reset" onclick="resetDevice('${canonMac}')">🔄 تصفير</button>
+          <button type="button" class="action-btn btn-delete" onclick="deleteDevice('${canonMac}')">🗑️ حذف</button>
+        </div>
+      </div>
+    `;
+
+    tableHtml += `
+      <tr>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="device-pill" title="انقر لتعديل اسم الجهاز ✏️">
+            <span class="dev-type-icon">${getDeviceIcon(name)}</span>
+            <input class="dev-name-input" value="${name}" id="tbl_n_${canonMac}" 
+                   onchange="saveDeviceName('${canonMac}', this.value)" 
+                   onkeydown="if(event.key==='Enter') this.blur()" 
+                   title="انقر لتعديل اسم الجهاز ثم اضغط Enter">
+            <span class="rename-icon" onclick="this.previousElementSibling.focus()" title="تعديل اسم الجهاز">✏️</span>
+          </div>
+        </td>
+        <td>
+          <div class="net-addr-stacked">
+            <div class="ip-pill">
+              <span style="direction:ltr">🌐 ${ip}</span>
+              ${dev.bound_ip ? '<span class="badge" style="background:rgba(16,185,129,0.2);color:var(--green);font-size:0.65rem;padding:1px 4px;border:1px solid rgba(16,185,129,0.4)">📌 ثابت</span>' : ''}
+            </div>
+            <div class="mac-pill">
+              <span style="opacity:0.7">🏷️</span>
+              <span style="direction:ltr;letter-spacing:0.3px">${mac}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="flow-stacked">
+            <div class="flow-line down" title="سرعة التحميل اللحظية">
+              <span class="flow-label">⬇️ تنزيل</span>
+              <span class="flow-val">${(dev.cur_down_bps/1000000).toFixed(2)} <small style="font-size:0.68rem;opacity:0.8">Mbps</small></span>
+            </div>
+            <div class="flow-line up" title="سرعة الرفع اللحظية">
+              <span class="flow-label">⬆️ رفع</span>
+              <span class="flow-val">${(dev.cur_up_bps/1000000).toFixed(2)} <small style="font-size:0.68rem;opacity:0.8">Mbps</small></span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="flow-stacked">
+            <div class="flow-line down" title="إجمالي التحميل">
+              <span class="flow-label">⬇️ تنزيل</span>
+              <span class="flow-val">${formatSmartBytes(dev.down)}</span>
+            </div>
+            <div class="flow-line up" title="إجمالي الرفع">
+              <span class="flow-label">⬆️ رفع</span>
+              <span class="flow-val">${formatSmartBytes(dev.up)}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="quota-stacked">
+            <div class="quota-line-top">
+              <span>الاستهلاك: <b style="color:${quotaBarColor}">${formatSmartBytes(dev.up + dev.down)}</b></span>
+              <div style="display:inline-flex;align-items:center;gap:2px">
+                <input type="number" step="0.5" min="0" value="${quotaGB}" id="tbl_q_${canonMac}" style="width:46px;padding:1px 3px;font-size:0.75rem;font-weight:700;text-align:center;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.4);color:#fff" title="كوتة الجهاز بالجيجابايت (0 = غير محدود)">
+                <span style="font-size:0.68rem;color:var(--muted)">GB</span>
+              </div>
+            </div>
+            <div class="quota-line-bottom">
+              <div class="quota-mini-bar" style="flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
+                <div class="quota-mini-fill" style="width:${Math.min(100, quotaPct)}%;height:100%;background:${quotaBarColor};transition:width 0.3s"></div>
+              </div>
+              ${quotaGB > 0 ? `<span style="font-size:0.7rem;padding:1px 5px;border-radius:4px;font-weight:800;white-space:nowrap;background:${quotaPct >= 100 ? 'rgba(239,68,68,0.2)' : (quotaPct >= 80 ? 'rgba(245,158,11,0.2)' : 'rgba(16,185,129,0.2)')};color:${quotaBarColor};border:1px solid ${quotaBarColor}">${quotaPct.toFixed(0)}%</span>` : '<span style="font-size:0.68rem;color:var(--muted);padding:1px 4px;border-radius:4px;white-space:nowrap;background:rgba(255,255,255,0.06)">مفتوح ∞</span>'}
+            </div>
+          </div>
+        </td>
+        <td>
+          <input type="number" step="0.5" min="0" value="${downLimit}" id="tbl_dl_${canonMac}" style="width:55px;padding:3px 5px;color:var(--cyan);text-align:center" title="أقصى سرعة تحميل Mbps">
+        </td>
+        <td>
+          <input type="number" step="0.5" min="0" value="${upLimit}" id="tbl_ul_${canonMac}" style="width:55px;padding:3px 5px;color:var(--accent);text-align:center" title="أقصى سرعة رفع Mbps">
+        </td>
+        <td>
+          <input type="text" value="${tgChat}" id="tbl_tg_${canonMac}" style="width:90px;padding:3px 5px;direction:ltr;text-align:center;font-size:0.75rem" placeholder="Chat ID" title="معرف التيليجرام لربط التنبيهات والأوامر">
+        </td>
+        <td>
+          <div style="display:flex;gap:3px;justify-content:center;flex-wrap:wrap">
+            <button class="primary-btn" style="padding:3px 7px;font-size:0.75rem" onclick="saveDeviceTable('${canonMac}')" title="حفظ التعديلات">💾</button>
+            <button class="action-btn btn-gaming" style="padding:3px 7px;font-size:0.75rem" onclick="toggleGaming('${canonMac}', ${!isGaming})" title="وضع الألعاب VIP">🎮</button>
+            <button class="action-btn ${isBlocked ? 'btn-unblock' : 'btn-block'}" style="padding:3px 7px;font-size:0.75rem" onclick="toggleBlock('${canonMac}', ${!isBlocked})" title="${isBlocked ? 'فك الحظر' : 'حظر'}">${isBlocked ? '🔓' : '⛔'}</button>
+            <button class="action-btn btn-reset" style="padding:3px 7px;font-size:0.75rem" onclick="resetDevice('${canonMac}')" title="تصفير العداد">🔄</button>
+            <button class="action-btn btn-delete" style="padding:3px 7px;font-size:0.75rem" onclick="deleteDevice('${canonMac}')" title="حذف">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  // 2. OFFLINE / PREVIOUSLY CONNECTED DEVICES
+  let offCardsHtml = '';
+  let offTableHtml = '';
+
+  offlineDevs.forEach(dev => {
+    let name = dev.name || 'جهاز مسجل';
+    let ip = dev.ip || '--';
+    let mac = dev.mac || '--';
+    let canonMac = dev.canon_mac || mac;
+    let isBlocked = !!dev.blocked;
+    let quotaGB = dev.quota_gb !== undefined ? dev.quota_gb : (dev.quota > 0 ? (dev.quota / 1000000000).toFixed(1) : 0);
+    let quotaPct = dev.quota_pct !== undefined ? dev.quota_pct : (dev.quota > 0 ? (((dev.up + dev.down) / dev.quota) * 100) : 0);
+    let quotaExceeded = dev.quota_exceeded !== undefined ? dev.quota_exceeded : (dev.quota > 0 && (dev.up + dev.down) >= dev.quota);
+    let upLimit = dev.upload_mbps !== undefined ? dev.upload_mbps : 0;
+    let downLimit = dev.download_mbps !== undefined ? dev.download_mbps : 0;
+    let tgChat = dev.telegram_chat_id || '';
+
+    let statusBadge = isBlocked ? '<span class="badge badge-blocked">⛔ محظور مسبقاً</span>' : '<span class="badge badge-offline">⚪ غير متصل</span>';
+    let quotaBarColor = quotaPct >= 100 ? 'var(--red)' : quotaPct >= 80 ? 'var(--amber)' : 'var(--muted)';
+    let quotaBarWidth = Math.min(quotaPct, 100);
+    let quotaText = quotaGB > 0 ? `${formatBytes(dev.up + dev.down)} / ${quotaGB} GB (${quotaPct.toFixed(0)}%)` : `${formatBytes(dev.up + dev.down)}`;
+
+    offCardsHtml += `
+      <div class="dev-card glass ${isBlocked ? 'blocked' : ''}" style="opacity:0.9;border-style:dashed">
+        <div class="dev-card-head">
+          <div>
+            <div class="dev-title" style="color:var(--muted)">${name}</div>
+            <div class="dev-sub">آخر IP: ${ip} | ${mac}</div>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+        <div class="stats-box">
+          <div><div class="lbl">تحميل سابق</div><div class="val" style="color:var(--green)">${formatBytes(dev.down)}</div></div>
+          <div><div class="lbl">رفع سابق</div><div class="val" style="color:var(--accent)">${formatBytes(dev.up)}</div></div>
+          <div><div class="lbl">الإجمالي</div><div class="val" style="color:var(--cyan)">${formatBytes(dev.up + dev.down)}</div></div>
+        </div>
+        <div class="quota-box" style="margin-top:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.78rem">
+            <span>📊 الكوتة المسبقة: <b>${quotaText}</b></span>
+            <span>حصة الباقة: ${dev.share_pct ? dev.share_pct.toFixed(1) : 0}%</span>
+          </div>
+          ${quotaGB > 0 ? `
+          <div class="progress-bg" style="height:8px"><div class="progress-fill" style="width:${quotaBarWidth}%;background:${quotaBarColor}"></div></div>
+          ` : ''}
+        </div>
+
+        <div class="dev-controls-grid">
+          <div>
+            <label>كوتة مسبقة (GB):</label>
+            <input type="number" step="0.5" min="0" value="${quotaGB}" id="card_q_${canonMac}" title="0 = غير محدود">
+          </div>
+          <div>
+            <label>⬇️ حد التحميل:</label>
+            <input type="number" step="0.5" min="0" value="${downLimit}" id="card_dl_${canonMac}" placeholder="Mbps">
+          </div>
+          <div>
+            <label>⬆️ حد الرفع:</label>
+            <input type="number" step="0.5" min="0" value="${upLimit}" id="card_ul_${canonMac}" placeholder="Mbps">
+          </div>
+        </div>
+        <button type="button" class="primary-btn" style="width:100%;padding:6px 10px;font-size:0.8rem;margin-bottom:8px" onclick="saveDeviceCard('${canonMac}')">💾 حفظ الإعدادات المسبقة</button>
+
+        <div class="btn-row">
+          <button type="button" class="action-btn ${isBlocked ? 'btn-unblock' : 'btn-block'}" onclick="toggleBlock('${canonMac}', ${!isBlocked})">${isBlocked ? 'إلغاء الحظر المسبق' : 'حظر مسبق'}</button>
+          <button type="button" class="action-btn btn-reset" onclick="resetDevice('${canonMac}')">🔄 تصفير</button>
+          <button type="button" class="action-btn btn-delete" onclick="deleteDevice('${canonMac}')">🗑️ حذف</button>
+        </div>
+      </div>
+    `;
+
+    offTableHtml += `
+      <tr>
+        <td>${statusBadge}</td>
+        <td>
+          <div class="device-pill" style="opacity:0.85">
+            <span class="dev-type-icon" style="opacity:0.75">${getDeviceIcon(name)}</span>
+            <input value="${name}" id="tbl_n_${canonMac}" style="width:100px;padding:2px 6px;font-weight:700;border:none;background:transparent;color:var(--muted)">
+          </div>
+        </td>
+        <td>
+          <div class="net-addr-stacked">
+            <div class="ip-pill" style="color:var(--muted);border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.03)">
+              <span style="direction:ltr">🌐 ${ip}</span>
+            </div>
+            <div class="mac-pill">
+              <span style="opacity:0.7">🏷️</span>
+              <span style="direction:ltr;letter-spacing:0.3px">${mac}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="flow-stacked">
+            <div class="flow-line down" title="إجمالي التحميل">
+              <span class="flow-label">⬇️ تنزيل</span>
+              <span class="flow-val">${formatSmartBytes(dev.down)}</span>
+            </div>
+            <div class="flow-line up" title="إجمالي الرفع">
+              <span class="flow-label">⬆️ رفع</span>
+              <span class="flow-val">${formatSmartBytes(dev.up)}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="quota-stacked">
+            <div class="quota-line-top">
+              <span>السابق: <b style="color:${quotaBarColor}">${formatSmartBytes(dev.up + dev.down)}</b></span>
+              <div style="display:inline-flex;align-items:center;gap:2px">
+                <input type="number" step="0.5" min="0" value="${quotaGB}" id="tbl_q_${canonMac}" style="width:46px;padding:1px 3px;font-size:0.75rem;font-weight:700;text-align:center;border-radius:4px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.4);color:#fff" title="كوتة الجهاز بالجيجابايت (0 = غير محدود)">
+                <span style="font-size:0.68rem;color:var(--muted)">GB</span>
+              </div>
+            </div>
+            <div class="quota-line-bottom">
+              <div class="quota-mini-bar" style="flex:1;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
+                <div class="quota-mini-fill" style="width:${Math.min(100, quotaPct)}%;height:100%;background:${quotaBarColor};transition:width 0.3s"></div>
+              </div>
+              ${quotaGB > 0 ? `<span style="font-size:0.7rem;padding:1px 5px;border-radius:4px;font-weight:800;white-space:nowrap;background:${quotaPct >= 100 ? 'rgba(239,68,68,0.2)' : (quotaPct >= 80 ? 'rgba(245,158,11,0.2)' : 'rgba(16,185,129,0.2)')};color:${quotaBarColor};border:1px solid ${quotaBarColor}">${quotaPct.toFixed(0)}%</span>` : '<span style="font-size:0.68rem;color:var(--muted);padding:1px 4px;border-radius:4px;white-space:nowrap;background:rgba(255,255,255,0.06)">مفتوح ∞</span>'}
+            </div>
+          </div>
+        </td>
+        <td>
+          <input type="number" step="0.5" min="0" value="${downLimit}" id="tbl_dl_${canonMac}" style="width:55px;padding:3px 5px;color:var(--cyan);text-align:center" title="أقصى سرعة تحميل Mbps">
+        </td>
+        <td>
+          <input type="number" step="0.5" min="0" value="${upLimit}" id="tbl_ul_${canonMac}" style="width:55px;padding:3px 5px;color:var(--accent);text-align:center" title="أقصى سرعة رفع Mbps">
+        </td>
+        <td>
+          <input type="text" value="${tgChat}" id="off_tbl_tg_${canonMac}" style="width:90px;padding:3px 5px;direction:ltr;text-align:center;font-size:0.75rem" placeholder="Chat ID" title="معرف التيليجرام لربط التنبيهات والأوامر">
+        </td>
+        <td>
+          <button class="action-btn ${isBlocked ? 'btn-unblock' : 'btn-block'}" style="padding:4px 8px" onclick="toggleBlock('${canonMac}', ${!isBlocked})">${isBlocked ? 'محظور مسبقاً' : 'نشط'}</button>
+        </td>
+        <td>
+          <div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap">
+            <button class="primary-btn" style="padding:4px 8px;font-size:0.8rem" onclick="saveDeviceTable('${canonMac}')" title="حفظ التعديلات">💾</button>
+            <button class="action-btn btn-reset" style="padding:4px 8px" onclick="resetDevice('${canonMac}')" title="تصفير العداد">🔄</button>
+            <button class="action-btn btn-delete" style="padding:4px 8px" onclick="deleteDevice('${canonMac}')" title="حذف من السجل">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  document.getElementById('cards-container').innerHTML = cardsHtml;
+  document.getElementById('devices-tbody').innerHTML = tableHtml;
+
+  let occ = document.getElementById('offline-cards-container');
+  let otb = document.getElementById('offline-devices-tbody');
+  if (occ) occ.innerHTML = offCardsHtml;
+  if (otb) otb.innerHTML = offTableHtml;
+}
+
+// Device Actions
+async function toggleGaming(mac, val) {
+  if (!isAdmin) { openLoginModal(); return; }
+  try {
+    await fetch('/api/device/gaming', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({mac: mac, gaming: val ? '1' : '0'})
+    });
+    refreshData();
+  } catch (e) {}
+}
+
+async function toggleBlock(mac, val) {
+  if (!isAdmin) { openLoginModal(); return; }
+  try {
+    await fetch('/api/device/block', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({mac: mac, blocked: val ? '1' : '0'})
+    });
+    refreshData();
+  } catch (e) {}
+}
+
+async function resetDevice(mac) {
+  if (!isAdmin) { openLoginModal(); return; }
+  if (!confirm('هل تريد تصفير عدادات هذا الجهاز؟')) return;
+  try {
+    await fetch('/api/device/reset', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({mac: mac})
+    });
+    refreshData();
+  } catch (e) {}
+}
+
+async function deleteDevice(mac) {
+  if (!isAdmin) { openLoginModal(); return; }
+  if (!confirm('هل تريد حذف هذا الجهاز من السجل نهائياً؟')) return;
+  try {
+    await fetch('/api/device/delete', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({mac: mac})
+    });
+    refreshData();
+  } catch (e) {}
+}
+
+async function saveDeviceTable(mac) {
+  if (!isAdmin) { openLoginModal(); return; }
+  let nameEl = document.getElementById('tbl_n_' + mac) || document.getElementById('off_tbl_n_' + mac);
+  let qEl = document.getElementById('tbl_q_' + mac) || document.getElementById('off_tbl_q_' + mac);
+  let dlEl = document.getElementById('tbl_dl_' + mac) || document.getElementById('off_tbl_dl_' + mac);
+  let ulEl = document.getElementById('tbl_ul_' + mac) || document.getElementById('off_tbl_ul_' + mac);
+  let tgEl = document.getElementById('tbl_tg_' + mac) || document.getElementById('off_tbl_tg_' + mac);
+  let name = nameEl ? nameEl.value : null;
+  let quota = qEl ? qEl.value : null;
+  let down = dlEl ? dlEl.value : null;
+  let up = ulEl ? ulEl.value : null;
+  let tgChat = tgEl ? tgEl.value : null;
+  await saveDeviceFull(mac, name, quota, down, up, tgChat);
+}
+
+async function saveDeviceCard(mac) {
+  if (!isAdmin) { openLoginModal(); return; }
+  let qEl = document.getElementById('card_q_' + mac) || document.getElementById('off_card_q_' + mac);
+  let dlEl = document.getElementById('card_dl_' + mac) || document.getElementById('off_card_dl_' + mac);
+  let ulEl = document.getElementById('card_ul_' + mac) || document.getElementById('off_card_ul_' + mac);
+  let tgEl = document.getElementById('card_tg_' + mac) || document.getElementById('off_card_tg_' + mac);
+  let quota = qEl ? qEl.value : null;
+  let down = dlEl ? dlEl.value : null;
+  let up = ulEl ? ulEl.value : null;
+  let tgChat = tgEl ? tgEl.value : null;
+  await saveDeviceFull(mac, null, quota, down, up, tgChat);
+}
+
+async function saveDeviceFull(mac, name, quotaGb, downMbps, upMbps, tgChatId) {
+  try {
+    let params = new URLSearchParams({mac: mac});
+    if (name) params.append('name', name);
+    if (quotaGb !== undefined && quotaGb !== null) params.append('quota_gb', quotaGb);
+    if (downMbps !== undefined && downMbps !== null) params.append('download_mbps', downMbps);
+    if (upMbps !== undefined && upMbps !== null) params.append('upload_mbps', upMbps);
+    if (tgChatId !== undefined && tgChatId !== null) params.append('telegram_chat_id', tgChatId);
+    let res = await fetch('/api/device/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: params
+    });
+    if (res.ok) {
+      alert('تم حفظ إعدادات الجهاز والكوتة والسرعة بنجاح! 💾');
+      refreshData();
+    } else {
+      alert('فشل حفظ الإعدادات');
+    }
+  } catch(e) {
+    alert('حدث خطأ أثناء الاتصال بالراوتر');
+  }
+}
+
+async function saveDeviceName(mac, newName) {
+  newName = (newName || '').trim();
+  if (!newName) return;
+  if (!isAdmin) { openLoginModal('لتعديل اسم الجهاز، يرجى تسجيل الدخول كمشرف'); return; }
+  try {
+    let res = await fetch('/api/device/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({mac: mac, name: newName})
+    });
+    if (res.ok) {
+      alert(`تم تعديل اسم الجهاز إلى (${newName}) بنجاح! ✏️`);
+      refreshData();
+    }
+  } catch (e) {}
+}
+
+async function saveDeviceSpeed(mac, upMbps, downMbps) {
+  if (!isAdmin) { openLoginModal(); return; }
+  try {
+    await fetch('/api/device/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({mac: mac, upload_mbps: upMbps, download_mbps: downMbps})
+    });
+    refreshData();
+  } catch (e) {}
+}
+
+// -----------------------------------------------------------------------------
+// SECURE OVER-THE-AIR (OTA) AUTOMATED UPDATE JAVASCRIPT
+// -----------------------------------------------------------------------------
+async function uploadOtaFirmware(e) {
+  e.preventDefault();
+  if (!isAdmin) { openLoginModal(); return; }
+  let fileInput = document.getElementById('ota_file');
+  if (!fileInput.files || fileInput.files.length === 0) {
+    alert('يرجى اختيار ملف التحديث (.bin) أولاً');
+    return;
+  }
+  let file = fileInput.files[0];
+  if (!file.name.endsWith('.bin')) {
+    if (!confirm('الملف المختار ليس بامتداد .bin، هل أنت متأكد من الاستمرار؟')) return;
+  }
+
+  let progressBox = document.getElementById('ota-progress-box');
+  let progressBar = document.getElementById('ota-progress-bar');
+  let progressTxt = document.getElementById('ota-progress-text');
+  let statusTxt = document.getElementById('ota-status-msg');
+
+  progressBox.style.display = 'block';
+  progressBar.style.width = '0%';
+  progressTxt.textContent = '0%';
+  statusTxt.textContent = 'جاري نقل الفيرموير ومسح البارتيشن الهدف...';
+
+  let xhr = new XMLHttpRequest();
+  xhr.open('POST', '/api/ota/update', true);
+  xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+
+  xhr.upload.onprogress = function(evt) {
+    if (evt.lengthComputable) {
+      let pct = Math.round((evt.loaded / evt.total) * 100);
+      progressBar.style.width = pct + '%';
+      progressTxt.textContent = pct + '%';
+      statusTxt.textContent = `جاري كتابة الفيرموير بالفلاش: ${pct}% (${(evt.loaded/1024/1024).toFixed(2)} MB / ${(evt.total/1024/1024).toFixed(2)} MB)...`;
+    }
+  };
+
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      progressBar.style.width = '100%';
+      progressTxt.textContent = '100%';
+      statusTxt.innerHTML = '🎉 <b style="color:var(--green)">تم تثبيت التحديث بنجاح!</b> جاري إعادة تشغيل الراوتر الآن على البارتيشن الجديد...';
+      setTimeout(() => {
+        location.reload();
+      }, 5000);
+    } else {
+      statusTxt.innerHTML = '❌ <b style="color:var(--red)">فشل التحديث: ' + xhr.responseText + '</b>';
+    }
+  };
+
+  xhr.onerror = function() {
+    statusTxt.innerHTML = '❌ <b style="color:var(--red)">انقطع الاتصال أثناء الرفع</b>';
+  };
+
+  xhr.send(file);
+}
+
+async function triggerUrlOta(e) {
+  e.preventDefault();
+  if (!isAdmin) { openLoginModal(); return; }
+  let url = document.getElementById('ota_remote_url').value.trim();
+  if (!url) {
+    alert('يرجى إدخال رابط التحديث أولاً');
+    return;
+  }
+
+  let progressBox = document.getElementById('ota-progress-box');
+  let progressBar = document.getElementById('ota-progress-bar');
+  let progressTxt = document.getElementById('ota-progress-text');
+  let statusTxt = document.getElementById('ota-status-msg');
+
+  progressBox.style.display = 'block';
+  progressBar.style.width = '5%';
+  progressTxt.textContent = 'جاري البدء...';
+  statusTxt.textContent = 'تم إرسال طلب الترقية، جاري الاتصال بالخادم وتنزيل الفيرموير...';
+
+  try {
+    let res = await fetch('/api/ota/update', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({url: url})
+    });
+    let data = await res.json();
+    if (data.ok) {
+      pollOtaStatus();
+    } else {
+      statusTxt.innerHTML = '❌ <b style="color:var(--red)">فشل بدء التحديث السحابي</b>';
+    }
+  } catch(e) {
+    statusTxt.innerHTML = '❌ <b style="color:var(--red)">خطأ في الاتصال بالراوتر</b>';
+  }
+}
+
+function pollOtaStatus() {
+  let timer = setInterval(async () => {
+    try {
+      let res = await fetch('/api/ota/status');
+      let st = await res.json();
+      let progressBar = document.getElementById('ota-progress-bar');
+      let progressTxt = document.getElementById('ota-progress-text');
+      let statusTxt = document.getElementById('ota-status-msg');
+
+      progressBar.style.width = st.progress + '%';
+      progressTxt.textContent = st.progress + '%';
+
+      if (st.state === 'downloading' || st.state === 'flashing') {
+        statusTxt.textContent = `جاري التنزيل والبرمجة: ${st.progress}% (${(st.written/1024).toFixed(0)} KB)...`;
+      } else if (st.state === 'success') {
+        clearInterval(timer);
+        progressBar.style.width = '100%';
+        statusTxt.innerHTML = '🎉 <b style="color:var(--green)">اكتملت الترقية بنجاح!</b> جاري إعادة التشغيل على البارتيشن الجديد...';
+        setTimeout(() => location.reload(), 5000);
+      } else if (st.state === 'failed') {
+        clearInterval(timer);
+        statusTxt.innerHTML = '❌ <b style="color:var(--red)">فشل التحديث: ' + st.error + '</b>';
+      }
+    } catch(e) {}
+  }, 1000);
+}
+
+async function checkCloudUpdates(btn) {
+  let oldText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '⏳ جاري الفحص...';
+  let box = document.getElementById('cloud-update-result');
+  box.style.display = 'block';
+  box.innerHTML = '🔍 جاري الاتصال بالسحابة والتحقق من الإصدارات...';
+
+  try {
+    let res = await fetch('/api/ota/check');
+    let data = await res.json();
+    if (data.ok) {
+      if (data.update_available) {
+        box.style.border = '1px solid var(--green)';
+        box.innerHTML = `
+          <div style="color:var(--green);font-weight:700;font-size:1rem;margin-bottom:6px">🚀 يتوفر إصدار أحدث للراوتر (${data.latest_version})!</div>
+          <div style="font-size:0.85rem;color:var(--text);margin-bottom:8px"><b>سجل التحديثات:</b> ${data.changelog || 'تحسينات في الأداء والاستقرار.'}</div>
+          <button type="button" class="primary-btn" onclick="startAutoCloudOta('${data.firmware_url}')" style="background:var(--green);color:#000;font-weight:700">⚡ تثبيت التحديث الهوائي الآن بنقرة واحدة</button>
+        `;
+      } else {
+        box.style.border = '1px solid var(--accent)';
+        box.innerHTML = `✅ <b style="color:var(--accent)">النظام محدث لأحدث إصدار مستقر (${data.current_version})</b>. لا توجد تحديثات جديدة حالياً.`;
+      }
+    } else {
+      box.style.border = '1px solid var(--amber)';
+      box.innerHTML = `⚠️ تعذر استرداد معلومات التحديث من السحابة. تأكد من اتصال الراوتر بالإنترنت (WAN).`;
+    }
+  } catch(e) {
+    box.style.border = '1px solid var(--red)';
+    box.innerHTML = `❌ خطأ في الاتصال أثناء التحقق من التحديثات.`;
+  }
+  btn.disabled = false;
+  btn.innerHTML = oldText;
+}
+
+function startAutoCloudOta(url) {
+  document.getElementById('ota_remote_url').value = url;
+  triggerUrlOta({preventDefault: ()=>{}});
+}
+
+// Main Quota & Period
+async function saveMainQuotaConfig(btn) {
+  if (!isAdmin) { openLoginModal(); return; }
+  let gb = document.getElementById('cfg_main_quota_gb').value;
+  let sDate = document.getElementById('cfg_start_date').value;
+  let eDate = document.getElementById('cfg_end_date').value;
+  btn.disabled = true;
+  try {
+    let res = await fetch('/api/main_quota', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({quota_gb: gb, start_date: sDate, end_date: eDate})
+    });
+    if (res.ok) alert('تم حفظ إعدادات باقة النت بنجاح!');
+    else alert('تعذر حفظ الإعدادات');
+  } catch (e) { alert('خطأ في الاتصال'); }
+  finally { btn.disabled = false; refreshData(); }
+}
+
+async function submitPeriodDays(e) {
+  e.preventDefault();
+  if (!isAdmin) { openLoginModal(); return; }
+  let d = document.getElementById('period_days').value;
+  try {
+    await fetch('/meter/period', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({period_days: d})
+    });
+    alert('تم تطبيق مدة الدورة الاحتياطية بنجاح!');
+  } catch (e) {}
+}
+
+async function resetMainQuota() {
+  if (!isAdmin) { openLoginModal(); return; }
+  if (!confirm('تحذير: سيتم تصفير جميع العدادات وإعادة بدء الدورة ورفع الحظر. هل أنت متأكد؟')) return;
+  try {
+    await fetch('/meter/reset', {method: 'POST'});
+    alert('تم تصفير العدادات وتجديد الدورة بنجاح!');
+    refreshData();
+  } catch (e) {}
+}
+
+// Telegram
+async function submitTelegramSettings(e) {
+  e.preventDefault();
+  if (!isAdmin) { openLoginModal(); return; }
+  let en = document.getElementById('cfg_tg_enable').checked ? '1' : '0';
+  let inter = document.getElementById('cfg_tg_interactive').checked ? '1' : '0';
+  let tok = document.getElementById('cfg_tg_token').value.trim();
+  let cid = document.getElementById('cfg_tg_chat_id').value.trim();
+  let th = document.getElementById('cfg_tg_thresholds').value.trim();
+  let btn = document.getElementById('tg_save_btn');
+  btn.disabled = true;
+  try {
+    let res = await fetch('/api/telegram', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({enable: en, interactive: inter, token: tok, chat_id: cid, thresholds: th})
+    });
+    if (res.ok) alert('تم حفظ إعدادات التيليجرام بنجاح!');
+    else alert('تعذر حفظ إعدادات التيليجرام');
+  } catch (e) { alert('خطأ في الاتصال'); }
+  finally { btn.disabled = false; }
+}
+
+async function testTelegramAlert(btn) {
+  if (!isAdmin) { openLoginModal(); return; }
+  btn.disabled = true;
+  let old = btn.textContent;
+  btn.textContent = 'جاري الإرسال...';
+  try {
+    let res = await fetch('/api/telegram', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({test: '1'})
+    });
+    let data = await res.json();
+    if (res.ok && data.ok) alert('تم إرسال الرسالة التجريبية إلى التيليجرام بنجاح! تفقد محادثتك.');
+    else alert('فشل الإرسال: تأكد من صحة التوكن والـ Chat ID واتصال الراوتر بالإنترنت.');
+  } catch (e) { alert('خطأ في الاتصال بالراوتر'); }
+  finally { btn.disabled = false; btn.textContent = old; }
+}
+
+// Performance & CPU Control
+let currentCpuFreq = 240;
+let currentWifiPs = false;
+
+function updatePresetUi(freq, ps) {
+  ['240', '160', '80'].forEach(f => {
+    let b = document.getElementById('btn-preset-' + f);
+    if (b) b.classList.remove('active');
+  });
+  if (freq === 240 && !ps) {
+    let b = document.getElementById('btn-preset-240');
+    if (b) b.classList.add('active');
+  } else if (freq === 160 && !ps) {
+    let b = document.getElementById('btn-preset-160');
+    if (b) b.classList.add('active');
+  } else if (freq === 80 && ps) {
+    let b = document.getElementById('btn-preset-80');
+    if (b) b.classList.add('active');
+  }
+}
+
+function updateDashboardCpuFreq(freq) {
+  let el = document.getElementById('cpu-clock-str');
+  if (el) el.textContent = 'التردد: ' + freq + ' MHz (Dual Core)';
+  let badge = document.getElementById('perf-badge-freq');
+  if (badge) badge.textContent = freq + ' MHz';
+}
+
+function selectCpuPreset(freq, ps) {
+  currentCpuFreq = freq;
+  currentWifiPs = ps;
+  let sel = document.getElementById('cfg_cpu_freq');
+  if (sel) sel.value = String(freq);
+  let chk = document.getElementById('cfg_wifi_ps');
+  if (chk) chk.checked = ps;
+  updatePresetUi(freq, ps);
+  updateDashboardCpuFreq(freq);
+}
+
+function onManualCpuFreqChange(val) {
+  currentCpuFreq = parseInt(val, 10) || 240;
+  let chk = document.getElementById('cfg_wifi_ps');
+  currentWifiPs = chk ? chk.checked : false;
+  updatePresetUi(currentCpuFreq, currentWifiPs);
+  updateDashboardCpuFreq(currentCpuFreq);
+}
+
+function onManualPowerSaveChange(val) {
+  currentWifiPs = !!val;
+  let sel = document.getElementById('cfg_cpu_freq');
+  currentCpuFreq = sel ? (parseInt(sel.value, 10) || 240) : 240;
+  updatePresetUi(currentCpuFreq, currentWifiPs);
+}
+
+async function submitPerformance(e) {
+  if (e) e.preventDefault();
+  if (!isAdmin) { openLoginModal(); return; }
+  let freq = document.getElementById('cfg_cpu_freq').value;
+  let ps = document.getElementById('cfg_wifi_ps').checked ? '1' : '0';
+  let btn = document.getElementById('perf_save_btn');
+  if (btn) btn.disabled = true;
+  try {
+    let res = await fetch('/api/performance', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({cpu_freq: freq, wifi_ps: ps})
+    });
+    if (res.ok) {
+      updateDashboardCpuFreq(parseInt(freq, 10));
+      updatePresetUi(parseInt(freq, 10), ps === '1');
+      alert('تم تطبيق إعدادات أداء المعالج والواي فاي بنجاح!');
+    } else {
+      alert('فشل حفظ إعدادات الأداء');
+    }
+  } catch (e) {
+    alert('حدث خطأ في الاتصال بالراوتر');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function submitAutoReboot(e) {
+  e.preventDefault();
+  if (!isAdmin) { openLoginModal(); return; }
+  let en = document.getElementById('cfg_rb_enable').checked ? '1' : '0';
+  let tm = document.getElementById('cfg_rb_time').value;
+  let tz = document.getElementById('cfg_rb_tz').value;
+  let btn = document.getElementById('rb_save_btn');
+  btn.disabled = true;
+  try {
+    await fetch('/api/auto_reboot', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({enable: en, time: tm, tz: tz})
+    });
+    alert('تم حفظ مؤقت إعادة التشغيل اليومي بنجاح!');
+  } catch (e) {}
+  finally { btn.disabled = false; }
+}
+
+async function submitCountdownReboot(e) {
+  e.preventDefault();
+  if (!isAdmin) { openLoginModal(); return; }
+  let min = document.getElementById('cfg_cd_min').value;
+  if (!confirm('بدء عد تنازلي لإعادة تشغيل الراوتر بعد ' + min + ' دقيقة؟')) return;
+  try {
+    await fetch('/api/system/reboot', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({countdown_min: min})
+    });
+    alert('تم تفعيل المؤقت التنازلي للريستارت!');
+  } catch (e) {}
+}
+
+function updateMeterScaleBadges(sc, std) {
+  let bSc = document.getElementById('badge-meter-scale');
+  if (bSc) bSc.textContent = sc + '%';
+  let bStd = document.getElementById('badge-gb-std');
+  if (bStd) bStd.textContent = std + ' MB';
+}
+
+function onMeterScaleChange(val) {
+  meterScalePct = parseInt(val, 10) || 100;
+  updateMeterScaleBadges(meterScalePct, gbStandard);
+}
+
+function onGbStandardChange(val) {
+  gbStandard = parseInt(val, 10) || 1024;
+  updateMeterScaleBadges(meterScalePct, gbStandard);
+  renderDevices();
+}
+
+async function saveMeterScaleConfig() {
+  if (!isAdmin) { openLoginModal(); return; }
+  let sc = document.getElementById('cfg_meter_scale').value;
+  let std = document.getElementById('cfg_gb_std').value;
+  let btn = document.getElementById('scale_save_btn');
+  if (btn) btn.disabled = true;
+  try {
+    let res = await fetch('/api/meter_scale', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({scale: sc, gb_std: std})
+    });
+    if (res.ok) {
+      gbStandard = parseInt(std, 10) || 1024;
+      meterScalePct = parseInt(sc, 10) || 100;
+      updateMeterScaleBadges(meterScalePct, gbStandard);
+      renderDevices();
+      alert('تم حفظ وتطبيق نسبة العداد ومعيار الجيجا بنجاح!');
+    } else {
+      alert('فشل حفظ إعدادات المعايرة');
+    }
+  } catch (err) {
+    alert('حدث خطأ في الاتصال بالراوتر');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function changeAdminPassword(e) {
+  e.preventDefault();
+  if (!isAdmin) { openLoginModal(); return; }
+  let oldP = document.getElementById('pw_old').value;
+  let newU = document.getElementById('pw_new_user').value.trim();
+  let newP = document.getElementById('pw_new_pass').value;
+  let btn = document.getElementById('pw_save_btn');
+  btn.disabled = true;
+  try {
+    let res = await fetch('/api/password', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams({old_pass: oldP, new_user: newU, new_pass: newP})
+    });
+    let data = await res.json();
+    if (res.ok && data.ok) {
+      alert('تم تحديث بيانات المشرف بنجاح!');
+      document.getElementById('pw_old').value = '';
+      document.getElementById('pw_new_pass').value = '';
+    } else {
+      alert('تعذر التحديث: ' + (data.error || 'خطأ'));
+    }
+  } catch (e) { alert('خطأ في الاتصال'); }
+  finally { btn.disabled = false; }
+}
+
+async function rebootRouter() {
+  if (!isAdmin) { openLoginModal(); return; }
+  if (!confirm('هل تريد إعادة تشغيل الراوتر الآن؟')) return;
+  try {
+    await fetch('/api/system/reboot', {method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: 'immediate=1'});
+    alert('جاري إعادة تشغيل الراوتر الآن... انتظر حوالي 10 ثوانٍ.');
+  } catch (e) {}
+}
+
+async function triggerScan() {
+  let btn = document.getElementById('scan_button');
+  btn.disabled = true;
+  btn.textContent = 'جاري الفحص...';
+  try {
+    await fetch('/api/scan/start', {method: 'POST'});
+    setTimeout(pollScanResults, 2000);
+  } catch (e) { btn.disabled = false; btn.textContent = '🔍 فحص'; }
+}
+
+async function pollScanResults() {
+  let btn = document.getElementById('scan_button');
+  try {
+    let res = await fetch('/api/scan');
+    let data = await res.json();
+    if (data.ready) {
+      let sel = document.getElementById('scan_results');
+      sel.innerHTML = '<option value="">اختر شبكة للاتصال بها</option>';
+      (data.results || []).forEach(net => {
+        let opt = document.createElement('option');
+        opt.value = net.ssid;
+        opt.textContent = `${net.ssid} (${net.rssi} dBm)${net.secured ? ' 🔒' : ''}`;
+        sel.appendChild(opt);
+      });
+      sel.onchange = () => { if (sel.value) document.getElementById('cfg_router_ssid').value = sel.value; };
+      btn.disabled = false;
+      btn.textContent = '🔍 فحص';
+    } else {
+      setTimeout(pollScanResults, 1000);
+    }
+  } catch (e) { btn.disabled = false; btn.textContent = '🔍 فحص'; }
+}
+
+setInterval(refreshData, 2000);
+refreshData();
+window.addEventListener('resize', drawSpeedChart);
+
+function autoDetectLocalTimezone() {
+  const offsetMin = -new Date().getTimezoneOffset();
+  const offsetHours = Math.round(offsetMin / 60);
+  const tzSelect = document.getElementById('cfg_rb_tz');
+  if (tzSelect) {
+    let found = false;
+    for (let opt of tzSelect.options) {
+      if (parseInt(opt.value) === offsetHours) {
+        tzSelect.value = String(offsetHours);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      const newOpt = document.createElement('option');
+      newOpt.value = String(offsetHours);
+      newOpt.textContent = `UTC${offsetHours >= 0 ? '+' : ''}${offsetHours} (توقيت جهازك الحالي)`;
+      tzSelect.appendChild(newOpt);
+      tzSelect.value = String(offsetHours);
+    }
+  }
+  alert(`تم اكتشاف وتعيين المنطقة الزمنية بنجاح: UTC${offsetHours >= 0 ? '+' : ''}${offsetHours}`);
+}
+
+</script>
+</body>
+</html>
+
